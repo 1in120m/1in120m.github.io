@@ -8,7 +8,7 @@
 <meta property="og:title" content="1億2千万分の1">
 <meta property="og:description" content="日本のどこかにランダムに生まれて、一度きりの人生を10分で生きる。">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#1b1f2a">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="1億2千万分の1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23e8503a'/%3E%3C/svg%3E">
@@ -85,7 +85,7 @@ window.JINSEI_CONFIG = {
     <div class="stat"><span class="stat-label">幸せ</span><div class="bar"><i id="bar-happy"></i></div><b id="val-happy"></b></div>
     <div class="stat"><span class="stat-label">学び</span><div class="bar"><i id="bar-learn"></i></div><b id="val-learn"></b></div>
     <div class="stat"><span class="stat-label">つながり</span><div class="bar"><i id="bar-bond"></i></div><b id="val-bond"></b></div>
-    <div class="money"><span class="stat-label">貯金</span><b id="val-money"></b><span class="life-job" id="life-job"></span></div>
+    <div class="money"><span class="stat-label">貯金</span><b id="val-money"></b><span class="stat-label">投資</span><b id="val-inv"></b><span class="stat-label">純資産</span><b id="val-net"></b><span class="life-job" id="life-job"></span></div>
   </div>
 
   <div id="log" class="log" aria-live="polite"></div>
@@ -99,9 +99,9 @@ window.JINSEI_CONFIG = {
   <footer class="controls">
     <button id="btn-pause" class="ctl" title="一時停止">⏸</button>
     <div class="speed">
-      <button class="ctl spd" data-ms="2600">ゆっくり</button>
-      <button class="ctl spd active" data-ms="1600">ふつう</button>
-      <button class="ctl spd" data-ms="450">はやい</button>
+      <button class="ctl spd" data-ms="3600">ゆっくり</button>
+      <button class="ctl spd active" data-ms="2400">ふつう</button>
+      <button class="ctl spd" data-ms="900">はやい</button>
     </div>
     <label class="auto"><input id="in-auto" type="checkbox"><span>おまかせ</span></label>
   </footer>
@@ -136,6 +136,22 @@ window.JINSEI_CONFIG = {
       <div class="r"><span>家族</span><b id="r-family"></b></div>
       <div class="r"><span>生涯の収入</span><b id="r-income"></b></div>
       <div class="r"><span>最後に住んでいた所</span><b id="r-live"></b></div>
+      <div class="r"><span>最後の純資産</span><b id="r-net"></b></div>
+      <div class="r"><span>いちばん多かった純資産</span><b id="r-peak"></b></div>
+      <div class="r"><span>投資（元本 → 損益）</span><b id="r-inv"></b></div>
+      <div class="r"><span>相続</span><b id="r-inherit"></b></div>
+    </div>
+
+    <h3>この人生のショートムービー</h3>
+    <p class="movie-note">生まれてから最後までを、BGMつきの縦動画（約1分）にします。「動画として保存」はスマホならそのまま TikTok や Instagram に出せます。</p>
+    <div class="share-row two">
+      <button id="btn-movie-play" class="btn btn-primary">ムービーを見る</button>
+      <button id="btn-movie-save" class="btn btn-sub">動画として保存</button>
+    </div>
+    <div id="movie" class="movie hidden">
+      <canvas id="movie-canvas" width="720" height="1280"></canvas>
+      <p id="movie-status" class="movie-status"></p>
+      <button id="btn-movie-close" class="btn btn-sub">閉じる</button>
     </div>
 
     <h3>人生地図（1マス＝1年、1行＝20年）</h3>
@@ -155,6 +171,7 @@ window.JINSEI_CONFIG = {
 </section>
 
 <script src="data.js"></script>
+<script src="movie.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
