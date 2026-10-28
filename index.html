@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1億2千万分の1 ― 日本のどこかに生まれて、一度きりの人生を</title>
+<meta name="description" content="日本のどこかにランダムに生まれて、一度きりの人生を10分で生きる無料の人生シミュレーション。都道府県・寿命・仕事・家族は公開統計をもとに決まります。">
+<meta property="og:title" content="1億2千万分の1">
+<meta property="og:description" content="日本のどこかにランダムに生まれて、一度きりの人生を10分で生きる。">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#1b1f2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="1億2千万分の1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23e8503a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+<script>
+// 公開時にここだけ書き換える
+window.JINSEI_CONFIG = {
+  siteUrl: 'https://1in120m.github.io/', // 公開URL（カードとシェア文に入る）
+  adsenseClient: '',           // ca-pub-xxxx（空なら広告枠は出ない）
+  adsenseSlot: '',
+  exitLink: {
+    label: '未経験で町工場に入る前に知っておくこと',
+    note: '作者が書いた本（Kindle）',
+    url: 'https://www.amazon.co.jp/dp/B0HPFDF3L4',
+  },
+};
+</script>
+</head>
+<body>
+
+<!-- タイトル -->
+<section id="screen-title" class="screen active">
+  <div class="title-wrap">
+    <p class="title-eyebrow">日本に生きる 1億2千万人のうちの</p>
+    <h1 class="title-main">1人として<br>生まれる</h1>
+    <p class="title-lead">生まれる県も、家も、体も、運も選べない。<br>そこから一度きりの人生を、10分で生きてみる。</p>
+
+    <label class="field">
+      <span>名前（なくてもいい）</span>
+      <input id="in-name" type="text" maxlength="12" placeholder="空ならランダム" autocomplete="off">
+    </label>
+
+    <label class="toggle">
+      <input id="in-gentle" type="checkbox">
+      <span>やさしい表示（自殺・事件などの重い死因を出さない）</span>
+    </label>
+
+    <button id="btn-birth" class="btn btn-primary btn-big">生まれる</button>
+
+    <p class="title-note">数字は国勢調査・人口動態統計・簡易生命表などの公開統計をもとにした目安です。<br>15歳以上向け。病気や死も統計どおりに起こりますが、場面は描きません。</p>
+
+    <div id="past-lives" class="past-lives hidden">
+      <h2>前世の記録</h2>
+      <ul id="past-list"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 誕生 -->
+<section id="screen-birth" class="screen">
+  <div class="birth-wrap">
+    <p class="birth-eyebrow" id="birth-year"></p>
+    <h2 class="birth-pref" id="birth-pref"></h2>
+    <p class="birth-line" id="birth-line1"></p>
+    <p class="birth-line" id="birth-line2"></p>
+    <p class="birth-line small" id="birth-line3"></p>
+    <button id="btn-start" class="btn btn-primary btn-big">人生をはじめる</button>
+  </div>
+</section>
+
+<!-- 人生 -->
+<section id="screen-life" class="screen">
+  <header class="life-head">
+    <div class="life-id">
+      <span id="life-name"></span>
+      <span class="sep">·</span>
+      <span id="life-pref"></span>
+    </div>
+    <div class="life-age"><span id="life-age">0</span><small>歳</small> <span class="life-year" id="life-year"></span></div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="stat-label">健康</span><div class="bar"><i id="bar-health"></i></div><b id="val-health"></b></div>
+    <div class="stat"><span class="stat-label">幸せ</span><div class="bar"><i id="bar-happy"></i></div><b id="val-happy"></b></div>
+    <div class="stat"><span class="stat-label">学び</span><div class="bar"><i id="bar-learn"></i></div><b id="val-learn"></b></div>
+    <div class="stat"><span class="stat-label">つながり</span><div class="bar"><i id="bar-bond"></i></div><b id="val-bond"></b></div>
+    <div class="money"><span class="stat-label">貯金</span><b id="val-money"></b><span class="life-job" id="life-job"></span></div>
+  </div>
+
+  <div id="log" class="log" aria-live="polite"></div>
+
+  <div id="decision" class="decision hidden">
+    <p class="decision-age" id="decision-age"></p>
+    <p class="decision-q" id="decision-q"></p>
+    <div id="decision-opts" class="decision-opts"></div>
+  </div>
+
+  <footer class="controls">
+    <button id="btn-pause" class="ctl" title="一時停止">⏸</button>
+    <div class="speed">
+      <button class="ctl spd" data-ms="2600">ゆっくり</button>
+      <button class="ctl spd active" data-ms="1600">ふつう</button>
+      <button class="ctl spd" data-ms="450">はやい</button>
+    </div>
+    <label class="auto"><input id="in-auto" type="checkbox"><span>おまかせ</span></label>
+  </footer>
+</section>
+
+<!-- 結果 -->
+<section id="screen-result" class="screen">
+  <div class="result-wrap">
+    <p class="result-eyebrow">この人生は、ここまで。</p>
+    <h2 class="result-main" id="result-main"></h2>
+    <p class="result-cause" id="result-cause"></p>
+    <p class="result-help hidden" id="result-help"></p>
+
+    <canvas id="card" width="1080" height="1350"></canvas>
+
+    <div class="share">
+      <button id="btn-share" class="btn btn-primary">この人生をシェア</button>
+      <div class="share-row">
+        <a id="share-x" class="btn btn-sub" target="_blank" rel="noopener">X に投稿</a>
+        <a id="share-line" class="btn btn-sub" target="_blank" rel="noopener">LINE で送る</a>
+        <button id="btn-save" class="btn btn-sub">画像を保存</button>
+      </div>
+    </div>
+
+    <div id="ad-result" class="ad hidden"></div>
+
+    <h3>人生の記録</h3>
+    <div class="result-grid">
+      <div class="r"><span>生きた年数</span><b id="r-age"></b></div>
+      <div class="r"><span>同じ年生まれの中で</span><b id="r-pct"></b></div>
+      <div class="r"><span>仕事</span><b id="r-job"></b></div>
+      <div class="r"><span>家族</span><b id="r-family"></b></div>
+      <div class="r"><span>生涯の収入</span><b id="r-income"></b></div>
+      <div class="r"><span>最後に住んでいた所</span><b id="r-live"></b></div>
+    </div>
+
+    <h3>人生地図（1マス＝1年、1行＝20年）</h3>
+    <div id="lifemap" class="lifemap"></div>
+    <p class="lifemap-legend">色は幸せの高さ。薄い＝つらい年、濃い＝いい年。</p>
+
+    <h3>この人生で起きたこと</h3>
+    <div id="result-log" class="result-log"></div>
+
+    <div class="exit">
+      <p class="exit-note" id="exit-note"></p>
+      <a id="exit-link" class="btn btn-sub" target="_blank" rel="noopener"></a>
+    </div>
+
+    <button id="btn-again" class="btn btn-primary btn-big">もう一度、生まれる</button>
+  </div>
+</section>
+
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
