@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://1in120m.github.io/sitemap.xml
