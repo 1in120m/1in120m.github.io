@@ -93,6 +93,7 @@ function newLife(name, gentle) {
     friend: null, lover: null, partner: null, kids: [], grandkids: [], pet: null, boss: null,
     edu: '中卒', stage: '幼児', job: null, working: false, regular: false, retired: false, home: '実家',
     habits: { smoke: false, exercise: false, saving: false },
+    traits: { 体力: clamp(35 + gauss() * 12, 10, 70), 頭脳: clamp(35 + gauss() * 12, 10, 70), 芸術: clamp(30 + gauss() * 12, 10, 70), 社交: clamp(35 + gauss() * 12, 10, 70), ものづくり: clamp(30 + gauss() * 12, 10, 70), お金: clamp(30 + gauss() * 10, 10, 70) }, likes: [],
     flags: {}, log: [], map: [], hist: [], cause: null, oneWord: '',
   };
   L.fullName = `${surname} ${L.name}`;
@@ -104,12 +105,19 @@ function newLife(name, gentle) {
   L.grands = [{ role: '祖母', name: pick(D.namesGrand.女), ageAtBirth: irnd(50, 68), alive: true }, { role: '祖父', name: pick(D.namesGrand.男), ageAtBirth: irnd(53, 70), alive: true }];
   return L;
 }
+const kRef = (k) => `${k.sex === '男' ? '息子' : '娘'}の${k.name}`;
+const pRef = (L) => `${L.sex === '男' ? '妻' : '夫'}の${L.partner.name}`;
+const fRef = (L) => `友達の${L.friend.name}`;
+const lRef = (L) => `恋人の${L.lover.name}`;
+const gRef = (gk) => `孫の${gk.name}`;
 const sibWord = (x) => x.older ? (x.sex === '男' ? '兄' : '姉') : (x.sex === '男' ? '弟' : '妹');
 
 /* ---------- ログ ---------- */
 let UI = {};
 function say(L, text, kind = 'info') { L.log.push({ age: L.age, text, kind }); UI.onLog && UI.onLog(L.log[L.log.length - 1]); }
 const add = (L, k, v) => { L.s[k] = clamp(L.s[k] + v); };
+const tr = (L, k, v) => { L.traits[k] = clamp(L.traits[k] + v); };
+const like = (L, x) => { if (x && !L.likes.includes(x) && L.likes.length < 8) L.likes.push(x); };
 
 /* ---------- 決断 ---------- */
 async function decide(L, q, options) {
@@ -139,20 +147,20 @@ async function stepYear(L) {
   }
   if (a === 1) say(L, `歩きはじめた。最初の言葉は「${pick(['まんま', 'ママ', 'パパ', 'わんわん', 'ブーブー'])}」。`);
   if (a === 2 && chance(0.7)) say(L, L.family.single ? '保育園に通いはじめた。母は朝から晩まで働いている。' : '保育園に通いはじめた。父も母も働いている。');
-  if (a === 3) say(L, chance(0.5) ? `${pref.spots[0]}に連れて行ってもらった。覚えていない。` : `祖母の${L.grands[0].name}によくなついた。`);
+  if (a === 3) say(L, chance(0.5) ? `${pref.spots[0]}に連れて行ってもらった。覚えていない。` : `祖母によくなついた。`);
   if (a >= 2 && a <= 6) { const next = L.sibs.find(x => !x.born); if (next && chance(0.4)) { next.born = true; say(L, `${sibWord(next)}の${next.name}が生まれた。`, 'good'); add(L, 'bond', 3); } }
-  if (a === 5) say(L, `七五三。${L.parents[0].name}が写真館で記念写真を撮った。`);
+  if (a === 5) say(L, `七五三。母が写真館で記念写真を撮った。`);
   if (a === 6) { say(L, `小学校に入学した。担任は${pick(D.surnames)}先生。`, 'milestone'); L.stage = '小学生'; }
-  if (a === 7 && !L.friend) { const fs = chance(0.7) ? L.sex : other(L.sex); L.friend = { name: pick(D.namesYoung[fs]), sex: fs }; say(L, `となりの席の${L.friend.name}と仲良くなった。毎日いっしょに帰る。`, 'good'); add(L, 'bond', 5); }
+  if (a === 7 && !L.friend) { const fs = chance(0.7) ? L.sex : other(L.sex); L.friend = { name: pick(D.namesYoung[fs]), sex: fs }; say(L, `となりの席の${L.friend.name}と仲良くなった。友達になった。毎日いっしょに帰る。`, 'good'); add(L, 'bond', 5); }
   if (a === 8 && L.family.tier !== '低' && chance(0.8)) {
     const o = ['ピアノ', 'スイミング', 'そろばん', '英語', 'サッカー', '習字', 'ダンス'].sort(() => rnd() - 0.5).slice(0, 3);
-    await decide(L, `${L.parents[0].name}が「何か習い事をしてみる？」と言う。`, [
-      ...o.map(x => ({ t: x, w: 25, f: () => { L.flags.lesson = x; say(L, `${x}を習いはじめた。月謝は${irnd(6, 12)}千円。`); add(L, 'learn', ['ピアノ', 'そろばん', '英語', '習字'].includes(x) ? 5 : 2); add(L, 'health', ['スイミング', 'サッカー', 'ダンス'].includes(x) ? 4 : 0); } })),
+    await decide(L, `母が「何か習い事をしてみる？」と言う。`, [
+      ...o.map(x => ({ t: x, w: 25, f: () => { L.flags.lesson = x; like(L, x); tr(L, ['ピアノ', '習字', 'ダンス'].includes(x) ? '芸術' : ['そろばん', '英語'].includes(x) ? '頭脳' : '体力', 8); say(L, `${x}を習いはじめた。月謝は${irnd(6, 12)}千円。`); add(L, 'learn', ['ピアノ', 'そろばん', '英語', '習字'].includes(x) ? 5 : 2); add(L, 'health', ['スイミング', 'サッカー', 'ダンス'].includes(x) ? 4 : 0); } })),
       { t: 'やらない', d: '遊ぶ時間が増える', w: 25, f: () => { add(L, 'happy', 2); } },
     ]);
   }
-  if (a === 10 && L.friend && chance(0.5)) await decide(L, `${L.friend.name}がクラスの子にからかわれている。`, [
-    { t: 'かばう', w: 55, f: () => { say(L, `${L.friend.name}をかばった。自分も少しからかわれたが、${L.friend.name}とは一生の友達になった。`, 'good'); add(L, 'bond', 8); add(L, 'happy', 2); } },
+  if (a === 10 && L.friend && chance(0.5)) await decide(L, `${fRef(L)}がクラスの子にからかわれている。`, [
+    { t: 'かばう', w: 55, f: () => { say(L, `${fRef(L)}をかばった。自分も少しからかわれたが、${fRef(L)}とは一生の友達になった。`, 'good'); add(L, 'bond', 8); add(L, 'happy', 2); } },
     { t: '見て見ぬふり', w: 45, f: () => { say(L, '何も言えなかった。そのことを長く覚えている。'); add(L, 'happy', -4); add(L, 'bond', -3); } },
   ]);
   if (a === 10 && chance(0.6)) say(L, `運動会のリレーで${pick(['転んだ', 'アンカーを走った', '1位になった', '2位だった'])}。`);
@@ -160,23 +168,23 @@ async function stepYear(L) {
   if (a === 13) {
     const sp = pick(['野球', 'サッカー', 'バスケ', 'バレー', '陸上', 'テニス', '卓球', '剣道']), cu = pick(['吹奏楽', '美術', '書道', '科学', '放送', '演劇']);
     await decide(L, '中学1年。部活はどうする？', [
-      { t: `${sp}部`, d: '体力と仲間', w: 55, f: () => { L.flags.club = '運動部'; L.flags.clubName = sp; say(L, `${sp}部に入った。朝練がつらい。`); add(L, 'health', 4); add(L, 'bond', 4); } },
-      { t: `${cu}部`, d: '好きなことを深める', w: 25, f: () => { L.flags.club = '文化部'; L.flags.clubName = cu; say(L, `${cu}部に入った。`); add(L, 'learn', 3); add(L, 'bond', 3); } },
+      { t: `${sp}部`, d: '体力と仲間', w: 55, f: () => { L.flags.club = '運動部'; L.flags.clubName = sp; say(L, `${sp}部に入った。朝練がつらい。`); add(L, 'health', 4); add(L, 'bond', 4); tr(L, '体力', 12); tr(L, '社交', 4); like(L, sp); } },
+      { t: `${cu}部`, d: '好きなことを深める', w: 25, f: () => { L.flags.club = '文化部'; L.flags.clubName = cu; say(L, `${cu}部に入った。`); add(L, 'learn', 3); add(L, 'bond', 3); tr(L, '芸術', 12); like(L, cu); } },
       { t: '入らない', d: '放課後は自由', w: 20, f: () => { L.flags.club = '帰宅部'; say(L, '部活には入らなかった。放課後はゲームと動画。'); add(L, 'learn', -1); add(L, 'happy', 2); } },
     ]);
   }
   if (a === 14 && chance(0.7)) {
     const ln = pick(D.namesYoung[other(L.sex)]); say(L, `初めて好きな人ができた。同じクラスの${ln}。`); add(L, 'happy', 4);
     await decide(L, `${ln}に気持ちを伝える？`, [
-      { t: '告白する', w: 40, f: () => { if (chance(0.4)) { L.lover = { name: ln }; say(L, `OKだった。${ln}と付き合うことになった。`, 'good'); add(L, 'happy', 8); add(L, 'bond', 3); } else { say(L, `振られた。しばらく学校に行くのがつらかった。`, 'bad'); add(L, 'happy', -5); } } },
+      { t: '告白する', w: 40, f: () => { tr(L, '社交', 4); if (chance(0.4)) { L.lover = { name: ln }; say(L, `OKだった。${ln}と付き合うことになった。`, 'good'); add(L, 'happy', 8); add(L, 'bond', 3); } else { say(L, `振られた。しばらく学校に行くのがつらかった。`, 'bad'); add(L, 'happy', -5); } } },
       { t: '言えない', w: 60, f: () => { say(L, '話しかけられないまま1年が過ぎた。'); } },
     ]);
   }
   if (a === 15) await decideHighSchool(L, pref);
   if (a === 18) await decideAfterHigh(L, pref);
   if (a === 20) {
-    say(L, `はたちになった。${L.livePref}の成人式で${L.friend ? L.friend.name + 'と' : ''}再会した。`, 'milestone');
-    if (chance(0.6)) await decide(L, `${L.friend ? L.friend.name : '友達'}にタバコを勧められた。`, [
+    say(L, `はたちになった。${L.livePref}の成人式で${L.friend ? fRef(L) + 'と' : ''}再会した。`, 'milestone');
+    if (chance(0.6)) await decide(L, `${L.friend ? fRef(L) : '友達'}にタバコを勧められた。`, [
       { t: '断る', w: L.sex === '男' ? 50 : 85, f: () => { } },
       { t: '吸ってみる', d: '習慣になるかもしれない', w: L.sex === '男' ? 50 : 15, f: () => { L.habits.smoke = true; say(L, 'タバコが習慣になった。月に1万円ほど煙になる。', 'bad'); } },
     ]);
@@ -191,24 +199,24 @@ async function stepYear(L) {
   /* --- 子ども時代の出来事 --- */
   if (a >= 7 && a <= 11) {
     const r = rnd();
-    if (r < 0.08 && L.friend) { say(L, `${L.friend.name}の家に泊まった。夜中までゲーム。`, 'good'); add(L, 'bond', 3); add(L, 'happy', 3); }
+    if (r < 0.08 && L.friend) { say(L, `${fRef(L)}の家に泊まった。夜中までゲーム。`, 'good'); add(L, 'bond', 3); add(L, 'happy', 3); }
     else if (r < 0.13) { say(L, '学校でいじめられた。誰にも言えなかった。', 'bad'); add(L, 'happy', -10); add(L, 'bond', -6); }
-    else if (r < 0.20) { say(L, `${pick(['インフルエンザ', '肺炎', '骨折'])}で入院した。${L.parents[0].name}が毎日来てくれた。`); add(L, 'health', -3); }
+    else if (r < 0.20) { say(L, `${pick(['インフルエンザ', '肺炎', '骨折'])}で入院した。母が毎日来てくれた。`); add(L, 'health', -3); }
     else if (r < 0.28 && L.family.tier !== '低') { say(L, `${pick(['ピアノ', 'スイミング', '習字', '英語', 'サッカー', '公文'])}を習いはじめた。月謝は${irnd(6, 12)}千円。`); add(L, 'learn', 4); }
-    else if (r < 0.34) { say(L, '本を読むのが好きになった。図書室の常連。'); add(L, 'learn', 5); }
+    else if (r < 0.34) { say(L, '本を読むのが好きになった。図書室の常連。'); add(L, 'learn', 5); tr(L, '頭脳', 8); like(L, '読書'); }
     else if (r < 0.40) { say(L, `家族で${pref.spots[1]}を見に行った。`, 'good'); add(L, 'happy', 3); }
-    else if (r < 0.43 && !L.family.single) { say(L, `父・${L.parents[1].name}の転勤で引っ越した。${L.friend ? L.friend.name + 'と別れた。' : ''}`); add(L, 'bond', -5); L.friend = null; }
-    else if (r < 0.46 && !L.family.single) { say(L, `両親が離婚した。母・${L.parents[0].name}と暮らすことになった。`, 'bad'); L.family.single = true; add(L, 'happy', -10); L.family.tier = L.family.tier === '高' ? '中' : '低'; }
+    else if (r < 0.43 && !L.family.single) { say(L, `父の転勤で引っ越した。${L.friend ? fRef(L) + 'と別れた。' : ''}`); add(L, 'bond', -5); L.friend = null; }
+    else if (r < 0.46 && !L.family.single) { say(L, `両親が離婚した。母と暮らすことになった。`, 'bad'); L.family.single = true; add(L, 'happy', -10); L.family.tier = L.family.tier === '高' ? '中' : '低'; }
     else if (r < 0.50) { L.pet = { name: pick(D.petNames), kind: pick(['犬', '猫', 'ハムスター', '金魚']) }; say(L, `${L.pet.kind}を飼いはじめた。名前は${L.pet.name}。`, 'good'); add(L, 'happy', 4); }
   }
   if (a >= 13 && a <= 17 && L.stage !== '社会人') {
     const r = rnd();
     if (r < 0.08) { say(L, 'スマホを持った。夜中まで見るようになった。'); add(L, 'health', -2); add(L, 'bond', 2); }
     else if (r < 0.15) { const ln = pick(D.namesYoung[other(L.sex)]); L.lover = { name: ln }; say(L, `${ln}と付き合いはじめた。初めての恋人。`, 'good'); add(L, 'happy', 6); }
-    else if (r < 0.19 && L.lover) { say(L, `${L.lover.name}に振られた。`, 'bad'); L.lover = null; add(L, 'happy', -6); }
+    else if (r < 0.19 && L.lover) { say(L, `${lRef(L)}に振られた。`, 'bad'); L.lover = null; add(L, 'happy', -6); }
     else if (r < 0.23) { say(L, '自転車で車と接触した。幸い軽いけが。'); add(L, 'health', -3); }
     else if (r < 0.29 && a >= 16 && !L.flags.baitoAsked) { L.flags.baitoAsked = true; await decide(L, `${pick(['コンビニ', 'ファミレス', 'スーパー', '塾'])}のバイト募集。やる？`, [
-      { t: 'やる', d: '月5万円', w: 55, f: () => { say(L, `バイトをはじめた。時給${irnd(10, 12)}00円。初任給で${pick(['スニーカー', 'ゲーム機', '親へのプレゼント', 'ライブのチケット'])}を買った。`, 'good'); add(L, 'bond', 2); add(L, 'learn', -2); L.money += 40; } },
+      { t: 'やる', d: '月5万円', w: 55, f: () => { tr(L, '社交', 5); tr(L, 'お金', 5); say(L, `バイトをはじめた。時給${irnd(10, 12)}00円。初任給で${pick(['スニーカー', 'ゲーム機', '親へのプレゼント', 'ライブのチケット'])}を買った。`, 'good'); add(L, 'bond', 2); add(L, 'learn', -2); L.money += 40; } },
       { t: '学校に集中する', w: 45, f: () => { add(L, 'learn', 3); } },
     ]); }
     else if (r < 0.33) { say(L, '学校に行けない時期があった。', 'bad'); add(L, 'happy', -8); add(L, 'learn', -4); }
@@ -216,17 +224,17 @@ async function stepYear(L) {
     else if (r < 0.42) { say(L, `${pick(['数学', '英語', '物理', '世界史'])}の${pick(D.surnames)}先生の授業が好きだった。`); add(L, 'learn', 3); }
     if (a === 17 && L.flags.club === '運動部' && !L.flags.lastAsked) { L.flags.lastAsked = true; await decide(L, `高3の夏。${L.flags.clubName}部の最後の大会と受験勉強が重なる。`, [
       { t: '最後まで部活をやり切る', w: 50, f: () => { say(L, `最後の大会は${pick(['初戦で負けた', '県大会ベスト8', '決勝で負けた'])}。泣いた。`, 'good'); add(L, 'happy', 6); add(L, 'bond', 4); add(L, 'learn', -2); } },
-      { t: '引退して受験に集中', w: 50, f: () => { add(L, 'learn', 6); add(L, 'happy', -2); } },
+      { t: '引退して受験に集中', w: 50, f: () => { add(L, 'learn', 6); add(L, 'happy', -2); tr(L, '頭脳', 6); } },
     ]); }
   }
 
   /* --- 大学・専門時代 --- */
   if (['大学生', '専門学生', '大学院生'].includes(L.stage) && a >= 19) {
     if (a === 19 && !L.flags.campusAsked) { L.flags.campusAsked = true; await decide(L, '学生生活、何に時間を使う？', [
-      { t: 'サークルと友達', w: 35, f: () => { const fs = chance(0.7) ? L.sex : other(L.sex); L.friend = { name: pick(D.namesYoung[fs]), sex: fs }; say(L, `${pick(['テニス', '軽音', '映画', 'ボランティア', 'フットサル'])}サークルで${L.friend.name}と出会った。`, 'good'); add(L, 'bond', 8); add(L, 'happy', 4); } },
-      { t: '勉強と資格', w: 25, f: () => { say(L, `${pick(['簿記', 'TOEIC', 'プログラミング', '教員免許'])}の勉強に打ち込んだ。`); add(L, 'learn', 8); } },
-      { t: 'バイト漬け', d: 'お金は貯まる', w: 25, f: () => { say(L, '週5でバイト。学費と生活費を自分で。'); L.money += 120; add(L, 'health', -3); add(L, 'learn', -2); } },
-      { t: '海外へ', d: '留学・バックパック', w: 15, f: () => { say(L, `${pick(['カナダ', 'オーストラリア', '台湾', 'ドイツ'])}へ半年。世界が広がった。`, 'good'); add(L, 'learn', 8); add(L, 'happy', 5); L.money -= 100; } },
+      { t: 'サークルと友達', w: 35, f: () => { const fs = chance(0.7) ? L.sex : other(L.sex); L.friend = { name: pick(D.namesYoung[fs]), sex: fs }; const ck = pick(['テニス', '軽音', '映画', 'ボランティア', 'フットサル']); like(L, ck); tr(L, '社交', 10); say(L, `${ck}サークルで${L.friend.name}と出会った。`, 'good'); add(L, 'bond', 8); add(L, 'happy', 4); } },
+      { t: '勉強と資格', w: 25, f: () => { tr(L, '頭脳', 10); say(L, `${pick(['簿記', 'TOEIC', 'プログラミング', '教員免許'])}の勉強に打ち込んだ。`); add(L, 'learn', 8); } },
+      { t: 'バイト漬け', d: 'お金は貯まる', w: 25, f: () => { tr(L, 'お金', 8); say(L, '週5でバイト。学費と生活費を自分で。'); L.money += 120; add(L, 'health', -3); add(L, 'learn', -2); } },
+      { t: '海外へ', d: '留学・バックパック', w: 15, f: () => { tr(L, '社交', 5); tr(L, '頭脳', 5); like(L, '旅'); say(L, `${pick(['カナダ', 'オーストラリア', '台湾', 'ドイツ'])}へ半年。世界が広がった。`, 'good'); add(L, 'learn', 8); add(L, 'happy', 5); L.money -= 100; } },
     ]); }
     const r = rnd();
     if (r < 0.15) { const fs = chance(0.7) ? L.sex : other(L.sex); L.friend = { name: pick(D.namesYoung[fs]), sex: fs }; say(L, `${pick(['サークル', 'ゼミ', 'バイト先'])}で${L.friend.name}と出会った。一生の友達になる。`, 'good'); add(L, 'bond', 6); }
@@ -237,7 +245,7 @@ async function stepYear(L) {
     if (a === 21 && L.stage === '大学生') say(L, '就職活動がはじまった。スーツで何十社も回った。');
   }
 
-  if (a === 22 && L.lover && chance(0.5)) { say(L, `${L.lover.name}とは、就職を機に自然と離れていった。`); L.lover = null; }
+  if (a === 22 && L.lover && chance(0.5)) { say(L, `${lRef(L)}とは、就職を機に自然と離れていった。`); L.lover = null; }
   /* --- 働く --- */
   if (L.working) await workYear(L, pref);
 
@@ -250,7 +258,7 @@ async function stepYear(L) {
 
   /* --- 健康の節目 --- */
   if (a === 35 && chance(0.6)) await decide(L, '健康診断で血圧と血糖が高めだと言われた。', [
-    { t: '運動と食事を変える', d: '長く効く', w: 45, f: () => { L.habits.exercise = true; add(L, 'health', 6); say(L, '週に2回走るようになった。体重が4キロ落ちた。', 'good'); } },
+    { t: '運動と食事を変える', d: '長く効く', w: 45, f: () => { L.habits.exercise = true; add(L, 'health', 6); tr(L, '体力', 8); like(L, 'ランニング'); say(L, '週に2回走るようになった。体重が4キロ落ちた。', 'good'); } },
     { t: '今は気にしない', w: 55, f: () => { add(L, 'health', -3); } },
   ]);
   if (a === 50) await decide(L, 'がん検診の案内が届いた。', [
@@ -267,12 +275,12 @@ async function stepYear(L) {
     const r = rnd();
     if (r < 0.04) { say(L, `${pick(['ぎっくり腰', '帯状疱疹', 'うつ', '胃潰瘍', 'ヘルニア'])}になった。しばらく休んだ。`, 'bad'); add(L, 'health', -6); add(L, 'happy', -4); }
     else if (r < 0.08) { L.flags.hobby = pick(['釣り', '登山', 'キャンプ', 'ランニング', '料理', 'ギター', 'ゴルフ', '推し活', '家庭菜園', 'サウナ']); say(L, `${L.flags.hobby}が趣味になった。`, 'good'); add(L, 'happy', 5); }
-    else if (r < 0.10 && !L.pet) { L.pet = { name: pick(D.petNames), kind: chance(0.5) ? '犬' : '猫' }; say(L, `${L.pet.kind}を飼いはじめた。名前は${L.pet.name}。`, 'good'); add(L, 'happy', 4); add(L, 'health', 2); }
-    else if (r < 0.13) { say(L, `${L.friend ? L.friend.name + 'と' : '友達と'}${pick(['沖縄', '北海道', '韓国', '台湾', 'ハワイ'])}に旅行した。`, 'good'); add(L, 'happy', 4); L.money -= 20; }
-    else if (r < 0.15 && L.friend) { say(L, `${L.friend.name}と疎遠になった。最後に会ったのがいつか思い出せない。`); add(L, 'bond', -5); }
+    else if (r < 0.10 && !L.pet) { L.pet = { name: pick(D.petNames), kind: chance(0.5) ? '犬' : '猫' }; like(L, L.pet.kind); say(L, `${L.pet.kind}を飼いはじめた。名前は${L.pet.name}。`, 'good'); add(L, 'happy', 4); add(L, 'health', 2); }
+    else if (r < 0.13) { like(L, '旅行'); say(L, `${L.friend ? fRef(L) + 'と' : '友達と'}${pick(['沖縄', '北海道', '韓国', '台湾', 'ハワイ'])}に旅行した。`, 'good'); add(L, 'happy', 4); L.money -= 20; }
+    else if (r < 0.15 && L.friend) { say(L, `${fRef(L)}と疎遠になった。最後に会ったのがいつか思い出せない。`); add(L, 'bond', -5); }
     else if (r < 0.17) { say(L, 'SNSで知り合った人たちと会うようになった。'); add(L, 'bond', 4); }
-    else if (r < 0.19 && L.friend) { say(L, `${L.friend.name}の結婚式でスピーチをした。`, 'good'); add(L, 'bond', 3); L.money -= 5; }
-    else if (r < 0.21 && L.pet && a - 10 > 0 && chance(0.5)) { say(L, `${L.pet.name}が死んだ。${irnd(12, 16)}年いっしょだった。`, 'bad'); L.pet = null; add(L, 'happy', -7); }
+    else if (r < 0.19 && L.friend) { say(L, `${fRef(L)}の結婚式でスピーチをした。`, 'good'); add(L, 'bond', 3); L.money -= 5; }
+    else if (r < 0.21 && L.pet && a - 10 > 0 && chance(0.5)) { say(L, `${L.pet.kind}の${L.pet.name}が死んだ。${irnd(12, 16)}年いっしょだった。`, 'bad'); L.pet = null; add(L, 'happy', -7); }
   }
 
   /* --- 災害 --- */
@@ -289,14 +297,14 @@ async function stepYear(L) {
   for (const g of L.grands) {
     if (!g.alive) continue;
     const ga = g.ageAtBirth + a;
-    if (chance(qx(ga, g.role === '祖母' ? '女' : '男'))) { g.alive = false; say(L, `${g.role}の${g.name}が亡くなった。${ga}歳だった。${a < 20 ? '初めてのお葬式。' : ''}`, 'bad'); add(L, 'happy', a < 25 ? -8 : -4); }
+    if (chance(qx(ga, g.role === '祖母' ? '女' : '男'))) { g.alive = false; say(L, `${g.role}が亡くなった。${ga}歳だった。${a < 20 ? '初めてのお葬式。' : ''}`, 'bad'); add(L, 'happy', a < 25 ? -8 : -4); }
   }
   for (const p of L.parents) {
     if (!p.alive) continue;
     const pa = p.ageAtBirth + a;
     if (chance(qx(pa, p.role === '母' ? '女' : '男') * 1.15)) {
       p.alive = false;
-      say(L, `${p.role}・${p.name}が亡くなった。${pa}歳だった。`, 'bad'); add(L, 'happy', a < 30 ? -14 : -9); add(L, 'bond', -4);
+      say(L, `${p.role}が亡くなった。${pa}歳だった。`, 'bad'); add(L, 'happy', a < 30 ? -14 : -9); add(L, 'bond', -4);
       if (L.flags.caring === p.role) L.flags.caring = null;
       inherit(L, p);
     }
@@ -343,7 +351,7 @@ function pickCause(L) {
 function die(L) {
   L.alive = false; L.map.push(Math.round(L.s.happy));
   const c = L.cause;
-  const who = L.partner?.alive ? `${L.partner.name}` : L.kids.length ? `${L.kids[0].name}` : L.friend ? L.friend.name : null;
+  const who = L.partner?.alive ? pRef(L) : L.kids.length ? kRef(L.kids[0]) : L.friend ? fRef(L) : null;
   const line = c === '老衰' ? `${L.age}歳、眠るように亡くなった。${who ? who + 'が手を握っていた。' : ''}` : `${L.age}歳で亡くなった。${/事故|地震|津波|殺人/.test(c) ? c + 'だった' : c + 'が原因だった'}。`;
   say(L, line, 'death');
 }
@@ -351,7 +359,7 @@ function die(L) {
 /* ---------- 進学 ---------- */
 async function decideHighSchool(L, pref) {
   await decide(L, '中学を卒業する。高校はどうする？', [
-    { t: '普通科に進む', w: 70 + L.s.learn / 2, f: () => { L.stage = '高校生'; L.flags.hs = '普通科'; say(L, `${pick(['県立', '市立', '私立'])}${pick(D.surnames).slice(0, 1)}${pick(['北', '南', '東', '西', '中央', '第一'])}高校の普通科に入った。${L.friend ? L.friend.name + 'とは別の高校になった。' : ''}`, 'milestone'); } },
+    { t: '普通科に進む', w: 70 + L.s.learn / 2, f: () => { L.stage = '高校生'; L.flags.hs = '普通科'; say(L, `${pick(['県立', '市立', '私立'])}${pick(D.surnames).slice(0, 1)}${pick(['北', '南', '東', '西', '中央', '第一'])}高校の普通科に入った。${L.friend ? fRef(L) + 'とは別の高校になった。' : ''}`, 'milestone'); } },
     { t: '工業・商業・農業などの専門学科へ', d: '手に職をつける', w: 22, f: () => { L.stage = '高校生'; L.flags.hs = '専門学科'; say(L, `${pick(['工業', '商業', '農業', '看護', '情報'])}高校に入った。`, 'milestone'); add(L, 'learn', 2); } },
     { t: '高校には行かない', d: '働きはじめる', w: 2, f: () => { L.stage = '社会人'; say(L, '高校には行かず、働きはじめた。', 'milestone'); } },
   ]);
@@ -370,9 +378,9 @@ async function decideAfterHigh(L, pref) {
       if (where !== L.livePref) { L.livePref = where; L.home = '一人暮らし'; say(L, `${where}の大学に合格した。親元を離れて家賃${irnd(5, 8)}万円の一人暮らし。`, 'milestone'); add(L, 'bond', -3); }
       else say(L, '地元の大学に合格した。', 'milestone');
       if (L.family.tier !== '高' && chance(0.5)) { L.debt += 300; say(L, '学費は奨学金。卒業後に300万円を返していく。'); }
-      add(L, 'learn', 8);
+      add(L, 'learn', 8); tr(L, '頭脳', 10);
     } },
-    { t: '専門学校に進む', d: '2年で資格をとる', w: 22, f: () => { L.stage = '専門学生'; L.edu = '専門卒'; say(L, `${pick(['看護', '保育', '美容', '調理', 'IT', 'デザイン', '自動車整備', '医療事務'])}の専門学校に入った。`, 'milestone'); add(L, 'learn', 4); if (L.family.tier === '低' && chance(0.5)) { L.debt += 150; say(L, '学費の一部は奨学金で。'); } } },
+    { t: '専門学校に進む', d: '2年で資格をとる', w: 22, f: () => { L.stage = '専門学生'; L.edu = '専門卒'; say(L, `${pick(['看護', '保育', '美容', '調理', 'IT', 'デザイン', '自動車整備', '医療事務'])}の専門学校に入った。`, 'milestone'); add(L, 'learn', 4); tr(L, 'ものづくり', 6); if (L.family.tier === '低' && chance(0.5)) { L.debt += 150; say(L, '学費の一部は奨学金で。'); } } },
     { t: '就職する', w: 15 + (L.flags.hs === '専門学科' ? 20 : 0), f: async () => { L.stage = '社会人'; await decideJob(L); } },
     { t: '浪人する', d: 'もう1年がんばる', w: 3, f: () => { L.stage = '浪人'; say(L, '予備校に通うことになった。'); add(L, 'learn', 5); } },
   ]);
@@ -391,13 +399,15 @@ function setJob(L, j) {
   if (['フリーランス', '会社の経営者', '農家', '漁師'].includes(j.name)) L.regular = j.name !== 'フリーランス';
   L.flags.promoted = false; L.flags.promoted2 = false; L.flags.jobStart = L.age;
   L.boss = { name: pick(D.surnames) };
+  tr(L, ['製造', '建設', '農林水産'].includes(j.field) ? 'ものづくり' : ['IT', '研究', '金融', '事務'].includes(j.field) ? '頭脳' : '社交', 8);
+  if (j.name === '会社の経営者' || j.name === 'フリーランス') tr(L, 'お金', 8);
   const s = salaryOf(L);
   say(L, `${L.regular ? '正社員' : j.name === 'フリーランス' ? '個人事業主' : '契約・パート'}として${j.name}になった。年収は${yen(s)}。上司は${L.boss.name}さん。`, 'milestone');
 }
 async function workYear(L, pref) {
   const a = L.age, j = L.job;
   const years = a - (L.flags.jobStart || a);
-  if (years === 1 && chance(0.5)) say(L, pick(['仕事を覚えるのに必死の一年。', '毎日くたくた。でも給料日はうれしい。', `${L.boss.name}さんに怒られながら覚えた。`, '初めてのボーナスで親に食事をごちそうした。']));
+  if (years === 1 && chance(0.5)) say(L, pick(['仕事を覚えるのに必死の一年。', '毎日くたくた。でも給料日はうれしい。', `上司の${L.boss.name}さんに怒られながら覚えた。`, '初めてのボーナスで親に食事をごちそうした。']));
   const r = rnd();
   if (r < 0.05 && j.health <= -1) { say(L, '残業が月80時間。体を壊した。'); add(L, 'health', -5); add(L, 'happy', -4); }
   else if (r < 0.09 && L.regular && a >= 30 && a <= 50 && !L.flags.promoted && !(L.flags.promoBlock && chance(0.5))) { L.flags.promoted = true; say(L, `${pick(['主任', '係長', '班長', 'リーダー', '店長'])}になった。年収${yen(salaryOf(L))}。`, 'good'); add(L, 'happy', 5); add(L, 'learn', 3); }
@@ -415,9 +425,9 @@ async function workYear(L, pref) {
       { t: 'いまのまま', w: 75, f: () => { } },
     ]);
   }
-  else if (r < 0.175) { say(L, pick(['職場に気の合う仲間ができた。', '後輩を育てる立場になった。', '仕事で表彰された。', `${L.boss.name}さんに「任せる」と言われた。`]), 'good'); add(L, 'bond', 3); add(L, 'happy', 3); }
+  else if (r < 0.175) { say(L, pick(['職場に気の合う仲間ができた。', '後輩を育てる立場になった。', '仕事で表彰された。', `上司の${L.boss.name}さんに「任せる」と言われた。`]), 'good'); add(L, 'bond', 3); add(L, 'happy', 3); }
   else if (r < 0.195) { say(L, pick([`上司の${L.boss.name}さんと合わない。毎朝が重い。`, '人手不足で休みが取れない。', '給料が3年上がっていない。']), 'bad'); add(L, 'happy', -5); }
-  if (j.field === '製造' && years === 3 && chance(0.4)) { say(L, '機械を一人で任されるようになった。', 'good'); add(L, 'learn', 4); }
+  if (j.field === '製造' && years === 3 && chance(0.4)) { say(L, '機械を一人で任されるようになった。', 'good'); add(L, 'learn', 4); tr(L, 'ものづくり', 8); }
 }
 async function joblessYear(L) {
   if (L.flags.jobless) { L.flags.jobless++; if (L.flags.jobless >= 2) { L.flags.jobless = 0; const nj = pick(jobOptions(L, 3, L.job && chance(0.5) ? L.job.field : null)); say(L, '半年の失業を経て、次の仕事が見つかった。'); setJob(L, nj); } }
@@ -438,16 +448,16 @@ async function familyYear(L, pref) {
   } else if (L.lover && !L.partner && a >= 22) {
     if (chance(0.55)) {
       const ln = L.lover.name;
-      await decide(L, L.sex === '男' ? `${ln}にプロポーズするか、迷っている。` : `${ln}にプロポーズされた。`, [
+      await decide(L, L.sex === '男' ? `恋人の${ln}にプロポーズするか、迷っている。` : `恋人の${ln}にプロポーズされた。`, [
         { t: '結婚する', w: 70, f: () => {
           L.partner = { name: ln, alive: true, age: L.lover.age || a + irnd(-3, 3), job: L.lover.job || pick(JOBS).name, works: chance(L.sex === '男' ? 0.7 : 0.95), since: a };
           L.lover = null; if (L.home !== '持ち家') L.home = '賃貸';
-          say(L, `${ln}と結婚した。${L.surname}${ln}になる。`, 'milestone'); add(L, 'happy', 12); add(L, 'bond', 10);
+          say(L, `恋人の${ln}と結婚した。今日から${L.sex === '男' ? '妻' : '夫'}の${ln}。`, 'milestone'); add(L, 'happy', 12); add(L, 'bond', 10);
           L.flags.weddingAsk = true;
         } },
-        { t: 'まだ結婚はしない', w: 30, f: () => { if (chance(0.5)) { say(L, `その後、${ln}とは別れた。`, 'bad'); L.lover = null; add(L, 'happy', -6); } } },
+        { t: 'まだ結婚はしない', w: 30, f: () => { if (chance(0.5)) { say(L, `その後、恋人の${ln}とは別れた。`, 'bad'); L.lover = null; add(L, 'happy', -6); } } },
       ]);
-    } else if (chance(0.25)) { say(L, `${L.lover.name}と別れた。`, 'bad'); L.lover = null; add(L, 'happy', -6); }
+    } else if (chance(0.25)) { say(L, `${lRef(L)}と別れた。`, 'bad'); L.lover = null; add(L, 'happy', -6); }
   }
 
   if (L.flags.weddingAsk) { L.flags.weddingAsk = false; await decide(L, '結婚式はどうする？', [
@@ -455,7 +465,7 @@ async function familyYear(L, pref) {
     { t: '家族だけで小さく', d: '60万円', w: 40, f: () => { say(L, `${pick(['小さなチャペル', '地元の神社', '海の見えるレストラン'])}で家族だけの式。`, 'good'); L.money -= 60; add(L, 'happy', 4); } },
     { t: '写真だけ', d: '浮いたお金は新婚旅行に', w: 30, f: () => { say(L, `式はせず写真だけ。浮いたお金で${pick(['沖縄', 'ハワイ', 'イタリア', '北海道'])}へ新婚旅行。`); L.money -= 40; add(L, 'happy', 3); } },
   ]); }
-  if (L.partner && L.partner.alive && !L.flags.kidsAsked && a >= 24) { L.flags.kidsAsked = true; await decide(L, `${L.partner.name}と子どもの話をした。`, [
+  if (L.partner && L.partner.alive && !L.flags.kidsAsked && a >= 24) { L.flags.kidsAsked = true; await decide(L, `${pRef(L)}と子どもの話をした。`, [
     { t: '早く欲しい', w: 50, f: () => { L.flags.kidsWant = 1.4; } },
     { t: 'もう少し二人で', w: 35, f: () => { L.flags.kidsWant = 0.7; } },
     { t: '持たないでいい', w: 15, f: () => { L.flags.kidsWant = 0.15; say(L, '二人で生きていくことにした。'); } },
@@ -474,27 +484,27 @@ async function familyYear(L, pref) {
     }
     if (chance(D.marriage.divorceYearly * (L.s.happy < 40 ? 1.8 : 1))) {
       const half = Math.max(0, Math.round((L.money + L.inv) * 0.5));
-      say(L, `${L.partner.name}と離婚した。財産分与で${yen(half)}を渡した。`, 'bad'); add(L, 'happy', -14); add(L, 'bond', -8); L.money -= half * (L.money / Math.max(1, L.money + L.inv)); L.inv -= half * (L.inv / Math.max(1, L.money + L.inv));
+      say(L, `${pRef(L)}と離婚した。財産分与で${yen(half)}を渡した。`, 'bad'); add(L, 'happy', -14); add(L, 'bond', -8); L.money -= half * (L.money / Math.max(1, L.money + L.inv)); L.inv -= half * (L.inv / Math.max(1, L.money + L.inv));
       L.flags.divorced = true; L.partner = null;
       if (L.kids.length && L.sex === '男') say(L, `子どもは母親と暮らすことになった。養育費は月${irnd(3, 6)}万円。`);
     }
   }
   for (const k of L.kids) {
     const ka = a - k.born;
-    if (ka === 6 && chance(0.6)) say(L, `${k.name}が小学校に入った。ランドセルは${pick(['祖父母', L.partner ? L.partner.name : '自分'])}が買った。`);
-    if (ka === 13 && chance(0.4)) say(L, `${k.name}が反抗期。口をきいてくれない。`);
-    if (ka === 12 && !k.jukuAsked) { k.jukuAsked = true; await decide(L, `${k.name}が中学に上がる。塾に通わせる？`, [
-      { t: '通わせる', d: '年40万円', w: 55, f: () => { k.juku = true; say(L, `${k.name}を塾に入れた。送り迎えの日々。`); L.money -= 40; } },
+    if (ka === 6 && chance(0.6)) say(L, `${kRef(k)}が小学校に入った。ランドセルは${pick(['祖父母', L.partner ? pRef(L) : '自分'])}が買った。`);
+    if (ka === 13 && chance(0.4)) say(L, `${kRef(k)}が反抗期。口をきいてくれない。`);
+    if (ka === 12 && !k.jukuAsked) { k.jukuAsked = true; await decide(L, `${kRef(k)}が中学に上がる。塾に通わせる？`, [
+      { t: '通わせる', d: '年40万円', w: 55, f: () => { k.juku = true; say(L, `${kRef(k)}を塾に入れた。送り迎えの日々。`); L.money -= 40; } },
       { t: '本人に任せる', w: 45, f: () => { } },
     ]); }
-    if (ka === 15 && chance(0.5)) await decide(L, `${k.name}の高校受験。${k.juku ? '塾の先生は「上を狙える」と言う。' : ''}`, [
-      { t: '私立も受けさせる', d: '学費は年100万円', w: 40, f: () => { say(L, `${k.name}は${chance(0.7) ? '私立に受かった。学費が重い。' : '公立に進んだ。'}`); L.money -= 100; } },
-      { t: '公立一本', w: 60, f: () => { say(L, `${k.name}は${chance(0.85) ? '公立に受かった。' : '滑り止めがなく、定時制に通うことになった。'}`); } },
+    if (ka === 15 && chance(0.5)) await decide(L, `${kRef(k)}の高校受験。${k.juku ? '塾の先生は「上を狙える」と言う。' : ''}`, [
+      { t: '私立も受けさせる', d: '学費は年100万円', w: 40, f: () => { say(L, `${kRef(k)}は${chance(0.7) ? '私立に受かった。学費が重い。' : '公立に進んだ。'}`); L.money -= 100; } },
+      { t: '公立一本', w: 60, f: () => { say(L, `${kRef(k)}は${chance(0.85) ? '公立に受かった。' : '滑り止めがなく、定時制に通うことになった。'}`); } },
     ]); 
-    if (ka === 18) { const u = chance(0.6); say(L, `${k.name}が${u ? '大学に進んだ' : '就職した'}。${u ? '入学金と学費で初年度150万円。' : ''}`); if (u) { L.money -= 150; k.univ = true; } }
-    if (ka === 22 && chance(0.5)) say(L, `${k.name}が家を出た。部屋が静かになった。`);
-    if (ka >= 26 && ka <= 36 && !k.married && chance(0.15)) { k.married = true; const pn = pick(D.namesYoung[other(k.sex)]); say(L, `${k.name}が${pn}さんと結婚した。${chance(0.5) ? '結婚資金として100万円を渡した。' : ''}`, 'good'); add(L, 'happy', 6); if (chance(0.5)) L.money -= 100; }
-    if (k.married && ka >= 27 && ka <= 40 && L.grandkids.length < 4 && chance(0.2)) { const gs = chance(0.5) ? '男' : '女'; const g = { name: pick(D.namesYoung[gs]), born: a }; L.grandkids.push(g); say(L, `${k.name}に${gs}の子が生まれた。${L.grandkids.length === 1 ? '初めての孫、' : ''}名前は${g.name}。`, 'good'); add(L, 'happy', 8); add(L, 'bond', 4); }
+    if (ka === 18) { const u = chance(0.6); say(L, `${kRef(k)}が${u ? '大学に進んだ' : '就職した'}。${u ? '入学金と学費で初年度150万円。' : ''}`); if (u) { L.money -= 150; k.univ = true; } }
+    if (ka === 22 && chance(0.5)) say(L, `${kRef(k)}が家を出た。部屋が静かになった。`);
+    if (ka >= 26 && ka <= 36 && !k.married && chance(0.15)) { k.married = true; const pn = pick(D.namesYoung[other(k.sex)]); say(L, `${kRef(k)}が${pn}さんと結婚した。${chance(0.5) ? '結婚資金として100万円を渡した。' : ''}`, 'good'); add(L, 'happy', 6); if (chance(0.5)) L.money -= 100; }
+    if (k.married && ka >= 27 && ka <= 40 && L.grandkids.length < 4 && chance(0.2)) { const gs = chance(0.5) ? '男' : '女'; const g = { name: pick(D.namesYoung[gs]), born: a }; L.grandkids.push(g); say(L, `${kRef(k)}に${gs}の子が生まれた。${L.grandkids.length === 1 ? '初めての孫、' : ''}名前は${g.name}。`, 'good'); add(L, 'happy', 8); add(L, 'bond', 4); }
   }
   if (L.home !== '持ち家' && a >= 29 && a <= 42 && (L.partner || L.money > 600) && !L.flags.homeAsked && chance(0.5)) {
     L.flags.homeAsked = true;
@@ -510,7 +520,7 @@ async function familyYear(L, pref) {
     const pa = p.ageAtBirth + a;
     if (p.alive && pa >= 82 && !L.flags.careAsked && chance(0.25)) {
       L.flags.careAsked = true;
-      await decide(L, `${p.role}・${p.name}に介護が必要になった。`, [
+      await decide(L, `${p.role}に介護が必要になった。`, [
         { t: '自分が中心になって見る', d: '時間とお金がかかる', w: 35, f: () => { L.flags.caring = p.role; add(L, 'bond', 5); add(L, 'health', -5); add(L, 'happy', -4); L.money -= 150; say(L, `${p.role}の介護で、仕事と実家の往復の日々。`); } },
         { t: '施設に頼む', d: '月15万円ほど', w: 40, f: () => { L.money -= 300; say(L, `${p.role}は施設に入った。週末に会いに行く。`); } },
         { t: '兄弟や親戚に任せる', w: L.sibs.length ? 25 : 2, f: () => { add(L, 'bond', -6); add(L, 'happy', -3); if (L.sibs.length) say(L, `${sibWord(L.sibs[0])}の${L.sibs[0].name}が見ることになった。少し気まずい。`); } },
@@ -540,11 +550,11 @@ async function elderYear(L, pref) {
   }
   if (a >= 66 && a <= 80) {
     const r = rnd();
-    if (r < 0.06) { say(L, pick(['毎朝、近所を散歩する。', '地域の集まりに顔を出すようになった。', `${L.friend ? L.friend.name + 'と' : '昔の仲間と'}年に一度集まる。`]), 'good'); add(L, 'bond', 4); add(L, 'health', 1); }
+    if (r < 0.06) { say(L, pick(['毎朝、近所を散歩する。', '地域の集まりに顔を出すようになった。', `${L.friend ? fRef(L) + 'と' : '昔の仲間と'}年に一度集まる。`]), 'good'); add(L, 'bond', 4); add(L, 'health', 1); }
     else if (r < 0.10) { say(L, pick(['膝が痛くて階段がつらい。', '白内障の手術をした。', '血圧の薬が増えた。'])); add(L, 'health', -3); }
-    else if (r < 0.13 && L.partner?.alive) { say(L, `${L.partner.name}と${pick(['温泉', pref.spots[0], '孫の運動会'])}に行った。`, 'good'); add(L, 'happy', 5); }
+    else if (r < 0.13 && L.partner?.alive) { say(L, `${pRef(L)}と${pick(['温泉', pref.spots[0], '孫の運動会'])}に行った。`, 'good'); add(L, 'happy', 5); }
     else if (r < 0.15 && !L.partner && !L.kids.length) { say(L, '一人の時間が長い。'); add(L, 'bond', -4); add(L, 'happy', -3); }
-    else if (r < 0.17 && L.grandkids.length) { say(L, `孫の${L.grandkids[0].name}にお年玉。${irnd(5, 10)}千円。`, 'good'); add(L, 'happy', 3); }
+    else if (r < 0.17 && L.grandkids.length) { say(L, `${gRef(L.grandkids[0])}にお年玉。${irnd(5, 10)}千円。`, 'good'); add(L, 'happy', 3); }
   }
   if (a === 75 && pref.urban < 0.6 && !L.flags.licenseAsked) {
     L.flags.licenseAsked = true;
@@ -555,13 +565,13 @@ async function elderYear(L, pref) {
   }
   if (L.partner && L.partner.alive) {
     const pAge = L.partner.age + (a - L.partner.since);
-    if (chance(qx(pAge, other(L.sex)))) { L.partner.alive = false; say(L, `${L.partner.name}が亡くなった。${pAge}歳だった。${a - L.partner.since}年いっしょにいた。`, 'bad'); add(L, 'happy', -18); add(L, 'bond', -8); add(L, 'health', -3); }
+    if (chance(qx(pAge, other(L.sex)))) { L.partner.alive = false; say(L, `${pRef(L)}が亡くなった。${pAge}歳だった。${a - L.partner.since}年いっしょにいた。`, 'bad'); add(L, 'happy', -18); add(L, 'bond', -8); add(L, 'health', -3); }
   }
   if (a >= 78 && !L.flags.care && chance(0.02 + (a - 78) * 0.012 + (L.s.health < 40 ? 0.05 : 0))) {
     L.flags.care = true; say(L, pick(['転んで骨折した。歩くのに杖が要るようになった。', '物忘れが増えた。認知症と診断された。', '脳梗塞で倒れた。左半身が動きにくい。']), 'bad'); add(L, 'health', -12);
-    if (!L.partner?.alive && chance(0.5)) { say(L, L.kids.length ? `${L.kids[0].name}の近くの施設に入った。月${irnd(15, 25)}万円。` : '施設に入った。'); L.home = '施設'; L.money -= 200; }
+    if (!L.partner?.alive && chance(0.5)) { say(L, L.kids.length ? `${kRef(L.kids[0])}の近くの施設に入った。月${irnd(15, 25)}万円。` : '施設に入った。'); L.home = '施設'; L.money -= 200; }
   }
-  if (a === 88 && chance(0.6)) say(L, `米寿。${L.kids.length ? L.kids.map(k => k.name).join('と') + 'が' : '親戚が'}集まった。`, 'good');
+  if (a === 88 && chance(0.6)) say(L, `米寿。${L.kids.length ? L.kids.map(kRef).join('と') + 'が' : '親戚が'}集まった。`, 'good');
   if (a === 100) say(L, '100歳。市長から表彰された。', 'milestone');
 }
 
@@ -573,21 +583,21 @@ async function lifeDecisions(L, pref) {
     { t: '中古で十分', d: '60万円', w: 50, f: () => { say(L, '中古の軽を60万円で買った。'); L.money -= 60; F.car = true; } },
     { t: '買わない', d: '自転車とバス', w: 20, f: () => { add(L, 'bond', -2); add(L, 'health', 2); } },
   ]); }
-  if (a === 27 && L.working && L.regular && !F.transferAsked && chance(0.5)) { F.transferAsked = true; const to = pick(PREFS.filter(p => p.name !== L.livePref)).name; await decide(L, `${to}への転勤を打診された。${L.lover ? L.lover.name + 'とは遠距離になる。' : ''}`, [
-    { t: '受ける', d: '出世コース', w: 45, f: () => { L.livePref = to; F.transferred = true; say(L, `${to}に引っ越した。知らない土地で一からやり直し。`, 'milestone'); add(L, 'bond', -6); add(L, 'learn', 4); if (L.lover && chance(0.5)) { say(L, `${L.lover.name}とは遠距離の末に別れた。`, 'bad'); L.lover = null; add(L, 'happy', -6); } } },
+  if (a === 27 && L.working && L.regular && !F.transferAsked && chance(0.5)) { F.transferAsked = true; const to = pick(PREFS.filter(p => p.name !== L.livePref)).name; await decide(L, `${to}への転勤を打診された。${L.lover ? lRef(L) + 'とは遠距離になる。' : ''}`, [
+    { t: '受ける', d: '出世コース', w: 45, f: () => { L.livePref = to; F.transferred = true; say(L, `${to}に引っ越した。知らない土地で一からやり直し。`, 'milestone'); add(L, 'bond', -6); add(L, 'learn', 4); if (L.lover && chance(0.5)) { say(L, `${lRef(L)}とは遠距離の末に別れた。`, 'bad'); L.lover = null; add(L, 'happy', -6); } } },
     { t: '断る', w: 55, f: () => { say(L, '転勤を断った。出世は遅れるかもしれない。'); F.promoBlock = true; } },
   ]); }
   if (a === 30 && !F.hobbyAsked) { F.hobbyAsked = true; const hs = ['釣り', '登山', 'キャンプ', 'ランニング', '料理', 'ギター', 'ゴルフ', '推し活', '家庭菜園', 'サウナ', '写真', '筋トレ'].sort(() => rnd() - 0.5).slice(0, 3); await decide(L, '30歳。何か一つ、長く続ける趣味を持つなら？', [
-    ...hs.map(h => ({ t: h, w: 30, f: () => { F.hobby = h; say(L, `${h}が趣味になった。週末が楽しみになる。`, 'good'); add(L, 'happy', 5); add(L, ['ランニング', '登山', '筋トレ'].includes(h) ? 'health' : 'bond', 3); } })),
+    ...hs.map(h => ({ t: h, w: 30, f: () => { F.hobby = h; like(L, h); tr(L, ['ランニング', '登山', '筋トレ', '釣り', 'キャンプ'].includes(h) ? '体力' : ['ギター', '写真', '料理'].includes(h) ? '芸術' : ['家庭菜園'].includes(h) ? 'ものづくり' : '社交', 8); say(L, `${h}が趣味になった。週末が楽しみになる。`, 'good'); add(L, 'happy', 5); add(L, ['ランニング', '登山', '筋トレ'].includes(h) ? 'health' : 'bond', 3); } })),
     { t: '特にない', w: 10, f: () => { } },
   ]); }
   if (a === 33 && L.working && !F.licenseAsk2 && chance(0.6)) { F.licenseAsk2 = true; const q = pick(['簿記2級', '宅建', '電気工事士', 'ケアマネ', 'TOEIC 800', '中小企業診断士', '衛生管理者']); await decide(L, `${q}の資格を取れば、仕事の幅が広がりそうだ。`, [
-    { t: '夜と週末に勉強する', d: '1年', w: 50, f: () => { if (chance(0.7)) { say(L, `${q}に合格した。手当がついた。`, 'good'); add(L, 'learn', 6); F.cert = true; } else { say(L, `${q}は不合格。来年また。`); add(L, 'learn', 3); } add(L, 'health', -1); } },
+    { t: '夜と週末に勉強する', d: '1年', w: 50, f: () => { if (chance(0.7)) { say(L, `${q}に合格した。手当がついた。`, 'good'); add(L, 'learn', 6); tr(L, '頭脳', 6); F.cert = true; } else { say(L, `${q}は不合格。来年また。`); add(L, 'learn', 3); } add(L, 'health', -1); } },
     { t: 'いまの仕事で手いっぱい', w: 50, f: () => { } },
   ]); }
-  if (a === 38 && L.friend && !F.guarantorAsked && chance(0.3)) { F.guarantorAsked = true; await decide(L, `${L.friend.name}が「借金の保証人になってほしい」と頼んできた。`, [
-    { t: '断る', w: 60, f: () => { say(L, `断った。${L.friend.name}とは気まずくなった。`); add(L, 'bond', -5); } },
-    { t: 'なる', d: '友達だから', w: 40, f: () => { if (chance(0.5)) { say(L, `${L.friend.name}が返せなくなり、300万円を肩代わりした。`, 'bad'); L.money -= 300; add(L, 'happy', -8); add(L, 'bond', -8); L.friend = null; } else { say(L, `${L.friend.name}はきちんと返した。`); add(L, 'bond', 4); } } },
+  if (a === 38 && L.friend && !F.guarantorAsked && chance(0.3)) { F.guarantorAsked = true; await decide(L, `${fRef(L)}が「借金の保証人になってほしい」と頼んできた。`, [
+    { t: '断る', w: 60, f: () => { say(L, `断った。${fRef(L)}とは気まずくなった。`); add(L, 'bond', -5); } },
+    { t: 'なる', d: '友達だから', w: 40, f: () => { if (chance(0.5)) { say(L, `${fRef(L)}が返せなくなり、300万円を肩代わりした。`, 'bad'); L.money -= 300; add(L, 'happy', -8); add(L, 'bond', -8); L.friend = null; } else { say(L, `${fRef(L)}はきちんと返した。`); add(L, 'bond', 4); } } },
   ]); }
   if (a === 40 && !F.dockAsked) { F.dockAsked = true; await decide(L, '40歳。人間ドックの案内が来た。', [
     { t: '毎年受ける', d: '年5万円', w: 50, f: () => { F.screening = true; say(L, '毎年、人間ドックを受けることにした。'); add(L, 'health', 2); } },
@@ -597,13 +607,13 @@ async function lifeDecisions(L, pref) {
     { t: '500万円を繰り上げ返済', d: '利息が減る', w: 50, f: () => { L.loan -= 500; L.money -= 500; L.loanYears = Math.max(1, L.loanYears - 6); say(L, '500万円を繰り上げ返済した。完済が6年早まる。', 'good'); } },
     { t: '貯金は残しておく', w: 50, f: () => { } },
   ]); }
-  if (a === 48 && L.parents.some(p => p.alive) && !F.cohabitAsked && chance(0.4)) { F.cohabitAsked = true; const p = L.parents.find(x => x.alive); await decide(L, `${p.role}・${p.name}が一人暮らしになった。同居する？`, [
-    { t: '同居する', w: 40, f: () => { say(L, `${p.role}と同居を始めた。${L.partner?.alive ? L.partner.name + 'は少し複雑そう。' : ''}`); add(L, 'bond', 5); add(L, 'happy', -2); F.cohabit = true; } },
+  if (a === 48 && L.parents.some(p => p.alive) && !F.cohabitAsked && chance(0.4)) { F.cohabitAsked = true; const p = L.parents.find(x => x.alive); await decide(L, `${p.role}が一人暮らしになった。同居する？`, [
+    { t: '同居する', w: 40, f: () => { say(L, `${p.role}と同居を始めた。${L.partner?.alive ? pRef(L) + 'は少し複雑そう。' : ''}`); add(L, 'bond', 5); add(L, 'happy', -2); F.cohabit = true; } },
     { t: '近くに住んでもらう', w: 40, f: () => { say(L, `${p.role}は近所のアパートに移った。週に一度ごはんを食べる。`); add(L, 'bond', 3); } },
     { t: 'いまのまま', w: 20, f: () => { } },
   ]); }
   if (a === 52 && L.working && !F.relearnAsked && chance(0.5)) { F.relearnAsked = true; await decide(L, '52歳。「学び直し」という言葉が気になる。', [
-    { t: 'オンラインで新しい分野を学ぶ', w: 40, f: () => { say(L, `${pick(['AI', 'データ分析', '英会話', '経営', '介護'])}を学び始めた。若い人と机を並べる。`, 'good'); add(L, 'learn', 8); add(L, 'happy', 3); } },
+    { t: 'オンラインで新しい分野を学ぶ', w: 40, f: () => { say(L, `${pick(['AI', 'データ分析', '英会話', '経営', '介護'])}を学び始めた。若い人と机を並べる。`, 'good'); add(L, 'learn', 8); tr(L, '頭脳', 6); add(L, 'happy', 3); } },
     { t: 'いまの経験を後輩に教える', w: 40, f: () => { say(L, '社内で若手の指導役になった。'); add(L, 'bond', 5); add(L, 'learn', 2); } },
     { t: 'どちらもしない', w: 20, f: () => { } },
   ]); }
@@ -616,16 +626,16 @@ async function lifeDecisions(L, pref) {
     { t: '孫や地域のために', w: 35, f: () => { say(L, `${L.grandkids.length ? '孫の送り迎え' : '町内会の役員'}を引き受けた。`); add(L, 'bond', 5); } },
     { t: '趣味に全部使う', w: 30, f: () => { say(L, `${F.hobby || '旅行'}三昧の毎日。`, 'good'); add(L, 'happy', 6); L.money -= 50; } },
   ]); }
-  if (a === 68 && !F.moveAsked && chance(0.5)) { F.moveAsked = true; const near = L.kids.length ? L.kids[0].name : null; await decide(L, `${near ? near + 'が「近くに来ない？」と言う。' : '家が広すぎる。'}住み替える？`, [
+  if (a === 68 && !F.moveAsked && chance(0.5)) { F.moveAsked = true; const near = L.kids.length ? kRef(L.kids[0]) : null; await decide(L, `${near ? near + 'が「近くに来ない？」と言う。' : '家が広すぎる。'}住み替える？`, [
     { t: near ? `${near}の近くへ` : '小さな家へ', w: 40, f: () => { say(L, near ? `${near}の家の近くに越した。孫と会う日が増えた。` : '駅前の小さなマンションに越した。', 'good'); add(L, 'bond', 5); L.money += L.homeValue ? Math.round(L.homeValue * 0.4) : 0; } },
     { t: '住み慣れた家に残る', w: 60, f: () => { } },
   ]); }
   if (a === 72 && !F.willAsked) { F.willAsked = true; await decide(L, '72歳。終活の本を読んだ。', [
-    { t: '遺言を書く', w: 50, f: () => { say(L, `遺言を書いた。${L.kids.length ? L.kids.map(k => k.name).join('と') + 'に残すものを決めた。' : '財産の行き先を決めた。'}`); add(L, 'happy', 2); F.will = true; } },
+    { t: '遺言を書く', w: 50, f: () => { say(L, `遺言を書いた。${L.kids.length ? L.kids.map(kRef).join('と') + 'に残すものを決めた。' : '財産の行き先を決めた。'}`); add(L, 'happy', 2); F.will = true; } },
     { t: 'まだ早い', w: 50, f: () => { } },
   ]); }
   if (a === 82 && !F.facilityAsked && (L.partner?.alive === false || !L.partner)) { F.facilityAsked = true; await decide(L, '一人暮らしが心配だと周りが言う。', [
-    { t: '施設に入る', d: '月20万円', w: 45, f: () => { L.home = '施設'; say(L, `${L.kids.length ? L.kids[0].name + 'の近くの' : ''}施設に入った。`); add(L, 'bond', 2); add(L, 'happy', -2); } },
+    { t: '施設に入る', d: '月20万円', w: 45, f: () => { L.home = '施設'; say(L, `${L.kids.length ? kRef(L.kids[0]) + 'の近くの' : ''}施設に入った。`); add(L, 'bond', 2); add(L, 'happy', -2); } },
     { t: '自宅で暮らし続ける', w: 55, f: () => { say(L, 'ヘルパーさんに週2回来てもらうことにした。'); L.money -= 30; add(L, 'happy', 3); } },
   ]); }
   if (a >= 25 && a <= 75 && chance(0.03) && L.money > 50) await decide(L, '年末ジャンボ、買う？', [
@@ -645,15 +655,15 @@ async function moneyDecisions(L, pref) {
   if (L.working && !L.flags.saveAsked && a >= 23 && a <= 30) {
     L.flags.saveAsked = true;
     await decide(L, `給料が入るようになった。お金の使い方は？`, [
-      { t: '先取りで貯金する', d: '給料の15%を別口座に', w: 45, f: () => { L.habits.saving = true; say(L, '給料日に自動で貯金する口座を作った。', 'good'); } },
+      { t: '先取りで貯金する', d: '給料の15%を別口座に', w: 45, f: () => { L.habits.saving = true; tr(L, 'お金', 8); say(L, '給料日に自動で貯金する口座を作った。', 'good'); } },
       { t: '使いたいときに使う', w: 55, f: () => { } },
     ]);
   }
   if (L.working && !L.flags.nisaAsked && a >= 25 && a <= 35 && chance(0.5)) {
     L.flags.nisaAsked = true;
-    await decide(L, `${L.friend ? L.friend.name : '同僚'}が「NISAで積立投資をしている」と言う。`, [
-      { t: '月3万円で始める', d: '年36万円を投資信託に', w: 30, f: () => { L.nisa = 36; say(L, 'NISAを始めた。毎月3万円、世界の株に積み立てる。', 'good'); } },
-      { t: '月1万円で始める', w: 30, f: () => { L.nisa = 12; say(L, 'NISAを始めた。毎月1万円。'); } },
+    await decide(L, `${L.friend ? fRef(L) : '同僚'}が「NISAで積立投資をしている」と言う。`, [
+      { t: '月3万円で始める', d: '年36万円を投資信託に', w: 30, f: () => { L.nisa = 36; tr(L, 'お金', 8); say(L, 'NISAを始めた。毎月3万円、世界の株に積み立てる。', 'good'); } },
+      { t: '月1万円で始める', w: 30, f: () => { L.nisa = 12; tr(L, 'お金', 5); say(L, 'NISAを始めた。毎月1万円。'); } },
       { t: 'よく分からないのでやらない', w: 40, f: () => { } },
     ]);
   }
@@ -661,7 +671,7 @@ async function moneyDecisions(L, pref) {
     L.flags.scamAsked = true;
     await decide(L, `${pick(['久しぶりに会った知人', 'SNSで知り合った人', '電話の相手'])}に「月利5%、元本保証」の投資を勧められた。`, [
       { t: '断る', w: 70, f: () => { } },
-      { t: '200万円を預ける', w: 30, f: () => { if (chance(0.85)) { say(L, '連絡が取れなくなった。投資詐欺だった。200万円が消えた。', 'bad'); L.money -= 200; add(L, 'happy', -8); } else { say(L, '半年後、260万円で戻ってきた。運がよかった。'); L.money += 60; } } },
+      { t: '200万円を預ける', w: 30, f: () => { if (chance(0.85)) { say(L, '連絡が取れなくなった。投資詐欺だった。200万円が消えた。', 'bad'); L.money -= 200; add(L, 'happy', -8); tr(L, 'お金', -6); } else { say(L, '半年後、260万円で戻ってきた。運がよかった。'); L.money += 60; } } },
     ]);
   }
   if (a >= 35 && a <= 50 && !L.flags.realEstateAsked && L.regular && salaryOf(L) >= 550 && L.money > 500 && chance(0.3)) {
@@ -675,7 +685,7 @@ async function moneyDecisions(L, pref) {
     L.flags.sideAsked = true;
     const sb = ['週末のデリバリー', '動画の編集', 'ハンドメイド販売', 'ブログ', '週1のバイト', 'せどり'].sort(() => rnd() - 0.5).slice(0, 3);
     await decide(L, '副業をしてみる？', [
-      ...sb.map(x => ({ t: x, d: '年30〜80万円', w: 15, f: () => { L.sideIncome = irnd(30, 80); say(L, `${x}の副業を始めた。年に${L.sideIncome}万円ほど増える。`); add(L, 'health', -2); } })),
+      ...sb.map(x => ({ t: x, d: '年30〜80万円', w: 15, f: () => { L.sideIncome = irnd(30, 80); tr(L, 'お金', 5); like(L, x); say(L, `${x}の副業を始めた。年に${L.sideIncome}万円ほど増える。`); add(L, 'health', -2); } })),
       { t: 'やらない', w: 55, f: () => { } },
     ]);
   }
@@ -719,6 +729,7 @@ function moneyYear(L, pref) {
   }
   if (L.habits.saving && L.working) exp *= 0.92;
   L.money += inc - exp;
+  if (a >= 65 && L.money < 0) { if (!L.flags.outOfMoney) { L.flags.outOfMoney = true; say(L, '貯金が底をついた。年金の範囲で暮らす。', 'bad'); add(L, 'happy', -6); } L.money = Math.max(L.money, -200); }
   if (L.money < -500 && !L.flags.broke) { L.flags.broke = true; say(L, 'カードローンが膨らんで、生活が苦しい。', 'bad'); add(L, 'happy', -8); }
   if (netWorth(L) > 3000 && !L.flags.rich) { L.flags.rich = true; say(L, `純資産が3,000万円を超えた。`, 'good'); }
   if (netWorth(L) > 10000 && !L.flags.rich2) { L.flags.rich2 = true; say(L, `純資産が1億円を超えた。`, 'good'); }
@@ -730,7 +741,19 @@ const screens = ['title', 'birth', 'life', 'result'];
 function show(name) { for (const s of screens) $(`#screen-${s}`).classList.toggle('active', s === name); window.scrollTo(0, 0); }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 async function waitUnpaused() { while (S.paused) await sleep(120); }
+function radarSvg(traits, size, withLabels) {
+  const keys = Object.keys(traits); const n = keys.length; const cx = size / 2, cy = size / 2, r = size * (withLabels ? 0.27 : 0.42);
+  const pt = (i, v) => { const ang = -Math.PI / 2 + i * 2 * Math.PI / n; return [cx + Math.cos(ang) * r * v, cy + Math.sin(ang) * r * v]; };
+  let s = `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" class="radar">`;
+  for (const lv of [0.33, 0.66, 1]) s += `<polygon points="${keys.map((k, i) => pt(i, lv).join(',')).join(' ')}" fill="none" stroke="#e4e6ea"/>`;
+  keys.forEach((k, i) => { const [x, y] = pt(i, 1); s += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e4e6ea"/>`; });
+  s += `<polygon points="${keys.map((k, i) => pt(i, Math.max(0.05, traits[k] / 100)).join(',')).join(' ')}" fill="rgba(74,123,208,.25)" stroke="#4a7bd0" stroke-width="2"/>`;
+  if (withLabels) keys.forEach((k, i) => { const [x, y] = pt(i, 1.25); s += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="${Math.round(size * 0.065)}" fill="#6b6f7a">${k}</text>`; });
+  return s + '</svg>';
+}
+function topTraits(L, n = 2) { return Object.entries(L.traits).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k]) => k); }
 function renderStats(L) {
+  const rd = $('#radar'); if (rd) rd.innerHTML = radarSvg(L.traits, 120, true);
   for (const k of ['health', 'happy', 'learn', 'bond']) { $(`#bar-${k}`).style.width = `${Math.round(L.s[k])}%`; $(`#val-${k}`).textContent = Math.round(L.s[k]); }
   $('#val-money').textContent = yen(L.money); $('#val-inv').textContent = yen(L.inv); $('#val-net').textContent = yen(netWorth(L));
   $('#life-job').textContent = L.job ? (L.working ? L.job.name : L.retired ? `元${L.job.name}` : '求職中') : ['大学生', '専門学生', '大学院生', '高校生', '中学生', '小学生', '浪人'].includes(L.stage) ? L.stage : '';
@@ -749,6 +772,7 @@ UI.ask = (L, q, options) => new Promise(resolve => {
   const box = $('#decision-opts'); box.innerHTML = '';
   options.forEach(o => { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = `${esc(o.t)}${o.d ? `<small>${esc(o.d)}</small>` : ''}`; b.onclick = () => { $('#decision').classList.add('hidden'); S.resolveAsk = null; resolve(o); }; box.appendChild(b); });
   $('#decision').classList.remove('hidden'); S.resolveAsk = { options, resolve };
+  requestAnimationFrame(() => { const lg = $('#log'); lg.scrollTop = lg.scrollHeight; });
 });
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
@@ -757,7 +781,7 @@ async function startLife(L) {
   $('#life-name').textContent = L.fullName; renderStats(L);
   await stepYear(L); await sleep(S.speedMs);
   while (L.alive) {
-    await waitUnpaused(); L.age++;
+    await waitUnpaused(); L.age++; renderStats(L);
     const before = L.log.length;
     await stepYear(L); renderStats(L);
     if (!L.alive) break;
@@ -788,11 +812,20 @@ function finish(L) {
   $('#r-net').textContent = yen(netWorth(L)); $('#r-peak').textContent = yen(L.peakNet);
   $('#r-inv').textContent = L.invIn ? `${yen(L.invIn)} → 損益 ${L.invGain >= 0 ? '+' : ''}${yen(L.invGain)}` : 'しなかった';
   $('#r-inherit').textContent = L.inherited ? yen(L.inherited) : 'なし';
+  $('#radar-result').innerHTML = radarSvg(L.traits, 260, true);
+  $('#r-traits').textContent = `得意：${topTraits(L).join('・')}`;
+  $('#r-likes').textContent = L.likes.length ? `好き：${L.likes.join('・')}` : '好き：まだ見つかっていない';
   const map = $('#lifemap'); map.innerHTML = '';
   L.map.forEach((h, i) => { const c = document.createElement('i'); c.style.opacity = (0.15 + h / 100 * 0.85).toFixed(2); c.title = `${i}歳 幸せ${h}`; map.appendChild(c); });
   const rl = $('#result-log'); rl.innerHTML = ''; L.log.filter(e => e.kind !== 'choice').forEach(e => logLine(e, rl));
-  const ex = CFG.exitLink || {};
-  if (ex.url) { $('#exit-link').href = ex.url; $('#exit-link').textContent = ex.label; $('#exit-note').textContent = (L.job && L.job.field === '製造') ? `${job}として生きたあなたへ。${ex.note}` : ex.note; } else $('.exit').classList.add('hidden');
+  const yd = CFG.yado;
+  if (yd && yd.base) {
+    const pg = D.yadoPages[L.pref] || D.yadoPages[L.livePref] || D.yadoRegion[prefByName(L.pref).region];
+    const which = D.yadoPages[L.pref] ? `生まれた${L.pref}` : D.yadoPages[L.livePref] ? `最後に住んだ${L.livePref}` : `${L.pref}の近く`;
+    $('#exit-link').href = pg ? `${yd.base}${pg[0]}/` : yd.base;
+    $('#exit-link').textContent = pg ? `${pg[1]}の安い宿を見る` : '日本の安い宿を見る';
+    $('#exit-note').textContent = `${which}に、泊まりに行ってみる。${yd.note || ''}`;
+  } else $('.exit').classList.add('hidden');
   const ad = $('#ad-result');
   if (CFG.adsenseClient && CFG.adsenseSlot) {
     ad.classList.remove('hidden');
@@ -818,13 +851,14 @@ function drawCard(L, pct) {
   c.fillStyle = '#fff'; c.font = FONT(700, 120); c.fillText(L.pref, 80, 260);
   c.font = FONT(500, 48); c.fillText(`に生まれて、${L.age}歳まで生きた。`, 80, 330);
   c.font = FONT(400, 38); c.fillStyle = 'rgba(255,255,255,.92)';
-  const lines = [`${L.fullName}（${L.sex}）· ${L.job ? L.job.name : '―'}`, `${summaryOf(L)}`, `${L.livePref}で${L.home} · 純資産 ${yen(netWorth(L))}`, `${L.cause === '老衰' ? '老衰で' : L.cause + 'で'}この世を去った。`];
+  const lines = [`${L.fullName}（${L.sex}）· ${L.job ? L.job.name : '―'}`, `${summaryOf(L)}`, `${L.livePref}で${L.home} · 純資産 ${yen(netWorth(L))}`, `得意は${topTraits(L).join('と')}${L.likes.length ? '、' + L.likes.slice(0, 2).join('と') + 'が好き' : ''}。`];
   lines.forEach((t, i) => c.fillText(t, 80, 420 + i * 56));
   [['健康', 'health'], ['幸せ', 'happy'], ['学び', 'learn'], ['つながり', 'bond']].forEach(([lab, k], i) => {
     const y = 690 + i * 42; c.fillStyle = 'rgba(255,255,255,.85)'; c.font = FONT(500, 28); c.textAlign = 'left'; c.fillText(lab, 80, y + 24);
     c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(230, y + 4, 740, 20); c.fillStyle = '#fff'; c.fillRect(230, y + 4, 740 * L.s[k] / 100, 20);
   });
-  c.fillStyle = 'rgba(255,255,255,.85)'; c.font = FONT(500, 30); c.fillText('人生地図：1マス＝1年、明るいほど幸せ', 80, 876);
+  c.fillStyle = 'rgba(255,255,255,.85)'; c.font = FONT(500, 30); c.fillText(`${L.cause === '老衰' ? '老衰で' : L.cause + 'で'}この世を去った。`, 80, 660);
+  c.fillText('人生地図：1マス＝1年、明るいほど幸せ', 80, 876);
   c.font = FONT(500, 30); c.textAlign = 'center'; c.fillText(`同じ年に生まれた${L.sex}の${pct}%より長く生きた`, W / 2, 1230);
   c.font = FONT(400, 26); c.fillText(CFG.siteUrl ? CFG.siteUrl.replace(/^https?:\/\//, '') : '#1億2千万分の1', W / 2, 1290);
 }

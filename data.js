@@ -170,4 +170,14 @@ const JINSEI_DATA = {
     女: ['幸子','和子','洋子','節子','久子','恵子','京子','美代子','敏子','明美'],
   },
   petNames: ['ポチ','モモ','ココ','マロン','レオ','ソラ','ハナ','チョコ','むぎ','小太郎'],
+
+  // 宿くらべ（本人のホテル比較サイト）の地域ページ。[スラッグ, 表示名]
+  yadoPages: {
+    '北海道': ['hokkaido-sapporo', '札幌'], '宮城県': ['miyagi-sendai', '仙台'], '栃木県': ['tochigi-nikko', '日光'], '群馬県': ['gunma-kusatsu', '草津温泉'],
+    '東京都': ['tokyo-tokyo', '東京23区'], '神奈川県': ['kanagawa-hakone', '箱根'], '新潟県': ['niigata-niigata', '新潟'], '石川県': ['ishikawa-kanazawa', '金沢'],
+    '長野県': ['nagano-nagano', '長野'], '静岡県': ['shizuoka-atami', '熱海'], '愛知県': ['aichi-nagoyashi', '名古屋'], '京都府': ['kyoto-shi', '京都'],
+    '大阪府': ['osaka-shi', '大阪'], '兵庫県': ['hyogo-kobe', '神戸・有馬温泉'], '和歌山県': ['wakayama-shirahama', '南紀白浜'], '広島県': ['hiroshima-hiroshima', '広島'],
+    '愛媛県': ['ehime-chuuyo', '松山・道後'], '長崎県': ['nagasaki-nagasaki', '長崎'], '熊本県': ['kumamoto-aso', '阿蘇'], '鹿児島県': ['kagoshima-kagoshima', '鹿児島・桜島'], '沖縄県': ['okinawa-nahashi', '那覇'],
+  },
+  yadoRegion: { '北海道': ['hokkaido-sapporo', '札幌'], '東北': ['miyagi-sendai', '仙台'], '関東': ['tokyo-tokyo', '東京23区'], '中部': ['nagano-nagano', '長野'], '近畿': ['kyoto-shi', '京都'], '中国': ['hiroshima-hiroshima', '広島'], '四国': ['ehime-chuuyo', '松山・道後'], '九州': ['kumamoto-aso', '阿蘇'], '沖縄': ['okinawa-nahashi', '那覇'] },
 };

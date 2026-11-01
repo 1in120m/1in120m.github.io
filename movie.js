@@ -11,7 +11,7 @@ function seedRnd(str) { let h = 2166136261; for (const ch of str) { h ^= ch.char
 /* ---------- 場面を選ぶ ---------- */
 function buildScenes(L, pct) {
   const evs = L.log.map((e, i) => ({ ...e, i })).filter(e => ['milestone', 'good', 'bad', 'death'].includes(e.kind));
-  const MAX = 30;
+  const MAX = 26;
   let chosen = evs;
   if (evs.length > MAX) {
     const must = evs.filter(e => e.kind === 'milestone' || e.kind === 'death');
@@ -22,9 +22,9 @@ function buildScenes(L, pct) {
     chosen = [...must, ...picked].sort((a, b) => a.i - b.i);
     if (chosen.length > MAX) { const keep = chosen.filter(e => e.kind !== 'milestone' || e.age <= 24 || e.age >= 55); chosen = (keep.length >= MAX ? keep : chosen).slice(0, MAX - 1).concat(chosen[chosen.length - 1]); }
   }
-  const scenes = [{ type: 'intro', dur: 2.6 }];
-  for (const e of chosen) scenes.push({ type: 'event', dur: e.kind === 'death' ? 2.6 : 1.7, e });
-  scenes.push({ type: 'outro', dur: 4.2, pct });
+  const scenes = [{ type: 'intro', dur: 3.2 }];
+  for (const e of chosen) scenes.push({ type: 'event', dur: e.kind === 'death' ? 3.6 : 2.5, e });
+  scenes.push({ type: 'outro', dur: 5.2, pct });
   let t = 0; for (const s of scenes) { s.t0 = t; t += s.dur; }
   return { scenes, total: t };
 }
@@ -232,8 +232,9 @@ function drawFrame(c, W, H, L, sc, local, opts) {
     c.fillStyle = '#1f2330'; c.font = FONT(700, 54); c.fillText(`${L.pref}に生まれて、`, W / 2, 360); c.fillText(`${L.age}歳まで生きた。`, W / 2, 430);
     c.font = FONT(500, 34); c.fillStyle = '#6b6f7a';
     const fam = []; if (L.partner) fam.push(`${L.sex === '男' ? '妻' : '夫'}・${L.partner.name}`); if (L.kids.length) fam.push(`子ども${L.kids.length}人`); if (L.grandkids.length) fam.push(`孫${L.grandkids.length}人`);
-    const ls = [`${L.fullName}（${L.sex}）· ${L.job ? L.job.name : '―'}`, fam.length ? fam.join('・') : '独身', `${L.livePref}で${L.home} · 純資産 ${yen(L.money + L.inv + L.homeValue - L.loan - L.debt)}`, `${L.cause === '老衰' ? '老衰' : L.cause}で、この世を去った。`];
-    ls.forEach((t, i) => c.fillText(t, W / 2, 520 + i * 54));
+    const tops = Object.entries(L.traits || {}).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
+    const ls = [`${L.fullName}（${L.sex}）· ${L.job ? L.job.name : '―'}`, fam.length ? fam.join('・') : '独身', `得意は${tops.join('と')}${L.likes?.length ? '、' + L.likes.slice(0, 3).join('・') + 'が好き' : ''}`, `${L.livePref}で${L.home} · 純資産 ${yen(L.money + L.inv + L.homeValue - L.loan - L.debt)}`, `${L.cause === '老衰' ? '老衰' : L.cause}で、この世を去った。`];
+    ls.forEach((t, i) => c.fillText(t, W / 2, 500 + i * 50));
     const total = Math.max(60, L.map.length); const cols = 20; const cell = Math.min(28, (W - 96) / cols - 6); const gx = (W - (cols * (cell + 6))) / 2;
     L.map.forEach((hp, i) => { c.fillStyle = `rgba(242,169,59,${0.25 + hp / 100 * 0.75})`; c.fillRect(gx + (i % cols) * (cell + 6), 800 + Math.floor(i / cols) * (cell + 6), cell, cell); });
     c.fillStyle = '#1f2330'; c.font = FONT(500, 30); c.fillText(`同じ年に生まれた${L.sex}の${sc.pct}%より長く生きた`, W / 2, 1080);

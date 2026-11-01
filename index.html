@@ -12,17 +12,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="1億2千万分の1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23e8503a'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=20261101d">
 <script>
 // 公開時にここだけ書き換える
 window.JINSEI_CONFIG = {
   siteUrl: 'https://1in120m.github.io/', // 公開URL（カードとシェア文に入る）
   adsenseClient: '',           // ca-pub-xxxx（空なら広告枠は出ない）
   adsenseSlot: '',
-  exitLink: {
-    label: '未経験で町工場に入る前に知っておくこと',
-    note: '作者が書いた本（Kindle）',
-    url: 'https://www.amazon.co.jp/dp/B0HPFDF3L4',
+  yado: {                      // 結果画面の出口：宿くらべ（ホテル比較サイト）
+    base: 'https://yamagishi0046-web.github.io/yado-kurabe/',
+    note: '毎日の料金を記録している宿の比較サイトです。',
   },
 };
 </script>
@@ -80,12 +79,15 @@ window.JINSEI_CONFIG = {
     <div class="life-age"><span id="life-age">0</span><small>歳</small> <span class="life-year" id="life-year"></span></div>
   </header>
 
+  <div class="stats-row">
   <div class="stats">
     <div class="stat"><span class="stat-label">健康</span><div class="bar"><i id="bar-health"></i></div><b id="val-health"></b></div>
     <div class="stat"><span class="stat-label">幸せ</span><div class="bar"><i id="bar-happy"></i></div><b id="val-happy"></b></div>
     <div class="stat"><span class="stat-label">学び</span><div class="bar"><i id="bar-learn"></i></div><b id="val-learn"></b></div>
     <div class="stat"><span class="stat-label">つながり</span><div class="bar"><i id="bar-bond"></i></div><b id="val-bond"></b></div>
     <div class="money"><span class="stat-label">貯金</span><b id="val-money"></b><span class="stat-label">投資</span><b id="val-inv"></b><span class="stat-label">純資産</span><b id="val-net"></b><span class="life-job" id="life-job"></span></div>
+  </div>
+  <div id="radar" class="radar-box" title="得意なこと"></div>
   </div>
 
   <div id="log" class="log" aria-live="polite"></div>
@@ -154,6 +156,12 @@ window.JINSEI_CONFIG = {
       <button id="btn-movie-close" class="btn btn-sub">閉じる</button>
     </div>
 
+    <h3>得意なこと・好きなこと</h3>
+    <div class="radar-wrap">
+      <div id="radar-result"></div>
+      <div class="radar-text"><p id="r-traits"></p><p id="r-likes"></p></div>
+    </div>
+
     <h3>人生地図（1マス＝1年、1行＝20年）</h3>
     <div id="lifemap" class="lifemap"></div>
     <p class="lifemap-legend">色は幸せの高さ。薄い＝つらい年、濃い＝いい年。</p>
@@ -170,8 +178,8 @@ window.JINSEI_CONFIG = {
   </div>
 </section>
 
-<script src="data.js"></script>
-<script src="movie.js"></script>
-<script src="game.js"></script>
+<script src="data.js?v=20261101d"></script>
+<script src="movie.js?v=20261101d"></script>
+<script src="game.js?v=20261101d"></script>
 </body>
 </html>
