@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://1in120m.github.io/</loc><lastmod>2026-11-01</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://1in120m.github.io/</loc><lastmod>2026-11-13</lastmod><changefreq>weekly</changefreq></url>
+  <url><loc>https://1in120m.github.io/howto.html</loc><lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://1in120m.github.io/data.html</loc><lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://1in120m.github.io/about.html</loc><lastmod>2026-11-13</lastmod><changefreq>monthly</changefreq></url>
+  <url><loc>https://1in120m.github.io/privacy.html</loc><lastmod>2026-11-13</lastmod><changefreq>yearly</changefreq></url>
+  <url><loc>https://1in120m.github.io/contact.html</loc><lastmod>2026-11-13</lastmod><changefreq>yearly</changefreq></url>
 </urlset>

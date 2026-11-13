@@ -117,3 +117,32 @@ button,input{font:inherit}
 .movie{margin-top:12px;text-align:center}
 #movie-canvas{width:100%;max-width:360px;height:auto;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);background:#fff}
 .movie-status{font-size:13px;color:var(--mute);margin:10px 0}
+
+/* 説明ページ・タイトル画面の説明とフッター（2026-11-13） */
+.intro{margin-top:40px;border-top:1px solid var(--line);padding-top:22px;font-size:15px;color:var(--ink)}
+.intro h2{font-size:16px;margin:0 0 10px}
+.intro p{margin:0 0 12px;line-height:1.8}
+.intro-links a,.site-foot a,.doc a{color:var(--accent);text-decoration:none}
+.intro-links a:hover,.site-foot a:hover,.doc a:hover{text-decoration:underline}
+.site-foot{margin-top:28px;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--mute);line-height:2}
+.site-foot p{margin:4px 0 0}
+.doc-body{display:block}
+.doc{max-width:640px;width:100%;margin:0 auto;padding:28px 16px 56px;font-size:15px}
+.doc h1{font-size:28px;line-height:1.3;margin:6px 0 18px}
+.doc h2{font-size:18px;margin:30px 0 8px;padding-top:6px;border-top:1px solid var(--line)}
+.doc p,.doc li{line-height:1.85}
+.doc p{margin:0 0 12px}
+.doc ul{padding-left:1.3em;margin:0 0 12px}
+.doc .lead{font-size:16px;color:var(--ink)}
+.doc-home{font-size:13px;margin:0}
+.doc-table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0 14px}
+.doc-table th,.doc-table td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;line-height:1.6}
+.doc-table th{background:var(--panel);font-weight:600;white-space:nowrap}
+.doc-table tbody th{width:7em}
+.faq dt{font-weight:700;margin-top:12px}
+.faq dd{margin:4px 0 0;line-height:1.8}
+.doc-date{color:var(--mute);font-size:13px}
+.doc-foot{margin-top:40px;border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--mute);line-height:2}
+.doc-nav b{color:var(--ink)}
+.doc-foot p{margin:4px 0 0}
+@media (max-width:480px){.doc-table{display:block;overflow-x:auto}}

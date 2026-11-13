@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>数字の根拠 ― 1億2千万分の1</title>
+<meta name="description" content="「1億2千万分の1」で使っている統計の出典と計算のしかた。都道府県の出生の重み、死亡率、死因、給与、進学率、生活費、投資、退職金、相続の決め方。">
+<link rel="canonical" href="https://1in120m.github.io/data.html">
+<meta property="og:title" content="数字の根拠 ― 1億2千万分の1">
+<meta property="og:description" content="「1億2千万分の1」で使っている統計の出典と計算のしかた。都道府県の出生の重み、死亡率、死因、給与、進学率、生活費、投資、退職金、相続の決め方。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://1in120m.github.io/data.html">
+<meta property="og:image" content="https://1in120m.github.io/og.png">
+<meta property="og:site_name" content="1億2千万分の1">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23e8503a'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css?v=20261113a">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4398716563180788" crossorigin="anonymous"></script>
+</head>
+<body class="doc-body">
+<main class="doc">
+  <p class="doc-home"><a href="./">← 1億2千万分の1 に戻る</a></p>
+  <h1>数字の根拠</h1>
+
+  <p class="lead">このゲームの中で起こることは、作者の思いつきではなく、日本政府などが公開している統計を丸めた数字で決まります。ここでは、どの数字をどこから取り、どう使っているかをまとめます。数字はすべて「目安」で、個人の人生を予測するものではありません。</p>
+
+  <h2>使っている統計</h2>
+  <table class="doc-table">
+    <thead><tr><th>ゲームの中で</th><th>もとにした統計</th><th>使い方</th></tr></thead>
+    <tbody>
+      <tr><td>生まれる県</td><td>国勢調査（総務省）・人口動態統計の出生数（厚生労働省）</td><td>県の人口 × 出生の係数を重みにして抽選。東京・神奈川・大阪・愛知に生まれやすく、鳥取・島根に生まれにくい</td></tr>
+      <tr><td>性別</td><td>人口動態統計の出生性比</td><td>男 51.3 : 女 48.7</td></tr>
+      <tr><td>毎年の死亡率</td><td>簡易生命表 2023（厚生労働省）</td><td>5歳刻みに丸めた死亡率を使い、毎年その確率で人生が終わる。女性は男性の約0.58倍。健康の数字・喫煙・運動で上下する</td></tr>
+      <tr><td>死因</td><td>人口動態統計 2023 の死因別死亡数</td><td>年齢帯ごとに多い死因（若年は事故・自殺、中年はがん、高齢は心疾患・肺炎・老衰）の傾向に合わせて選ぶ。「やさしい表示」では自殺・殺人を除く</td></tr>
+      <tr><td>給与</td><td>民間給与実態統計調査（国税庁）</td><td>年齢ごとの平均給与カーブ × 県の係数 × 学歴の係数。女性は0.72倍、非正規は0.48倍（統計上の格差をそのまま入れています）</td></tr>
+      <tr><td>大学進学率</td><td>学校基本調査（文部科学省）</td><td>県ごとの進学率を概算で使う。家の暮らし向きと「学び」の数字で上下する</td></tr>
+      <tr><td>職業</td><td>国勢調査の産業・職業別就業者数</td><td>学歴・県・選択に応じて、人数の多い職業から選ばれやすい</td></tr>
+      <tr><td>結婚・離婚・子どもの数</td><td>人口動態統計・出生動向基本調査（国立社会保障・人口問題研究所）</td><td>年齢ごとの結婚のしやすさ、離婚率約35%、子どもの数の分布に合わせる</td></tr>
+      <tr><td>持ち家</td><td>住宅・土地統計調査（総務省）</td><td>30〜40代で家を買う決断が出る。買うと住宅ローンが純資産を押し下げ、完済後に押し上げる</td></tr>
+    </tbody>
+  </table>
+
+  <h2>お金の計算</h2>
+  <ul>
+    <li><b>手取り</b> … 給与の約78%（税・社会保険を引いた概算）。</li>
+    <li><b>生活費</b> … 都市部は年320万円、地方は年240万円を基本に、実家暮らしは半分、配偶者がいれば＋120万円、子ども1人につき＋100万円。</li>
+    <li><b>投資</b> … NISA を選ぶと、年6%を中心に±15%の幅でぶれる（上がる年も下がる年もある）。65歳からは年4%ずつ取り崩す。</li>
+    <li><b>退職金</b> … 正社員の勤続年数に応じて300万〜2,200万円。</li>
+    <li><b>相続</b> … 親の暮らし向きに応じて0〜3,500万円を、きょうだいの人数で分ける。</li>
+    <li><b>年金</b> … 65歳から、現役時代の収入に応じた額。</li>
+  </ul>
+
+  <h2>1,000人分を回した結果</h2>
+  <p>数字が実態からずれていないか、1,000人分の人生を自動で回して確かめています。いまの設定での結果は次のとおりで、日本の実際の統計に近い値になるよう調整してあります。</p>
+  <table class="doc-table">
+    <thead><tr><th>項目</th><th>ゲーム（1,000人）</th><th>日本の実態（目安）</th></tr></thead>
+    <tbody>
+      <tr><td>平均寿命</td><td>81歳</td><td>男 81歳・女 87歳</td></tr>
+      <tr><td>結婚する人</td><td>76%</td><td>生涯未婚率 男 28%・女 18%</td></tr>
+      <tr><td>離婚</td><td>35%</td><td>約35%</td></tr>
+      <tr><td>子どもの数</td><td>1.2人</td><td>合計特殊出生率 1.20</td></tr>
+      <tr><td>大学に進む人</td><td>50%</td><td>約57%（短大含まず）</td></tr>
+      <tr><td>正社員</td><td>71%</td><td>役員を除く雇用者の約63%</td></tr>
+      <tr><td>持ち家</td><td>48%</td><td>約61%（世帯）</td></tr>
+    </tbody>
+  </table>
+
+  <h2>注意していること</h2>
+  <ul>
+    <li>統計上の格差（男女の賃金差・学歴による差・県による差）は、隠さずそのまま入れています。「そうあるべき」という主張ではなく、「いまの日本はこうなっている」を体験するためです。</li>
+    <li>自殺・事件・大きな病気は、統計どおりの割合で起こりますが、場面は描きません。結果画面には相談窓口を出します。</li>
+    <li>数字はすべて概算で、年によって更新します。出典の数字そのものは、各省庁のサイトで確認できます。</li>
+  </ul>
+
+  <footer class="doc-foot">
+    <nav class="doc-nav"><a href="howto.html">遊び方</a> · <b>数字の根拠</b> · <a href="about.html">このサイトについて</a> · <a href="privacy.html">プライバシーポリシー</a> · <a href="contact.html">お問い合わせ</a></nav>
+    <p>© 1億2千万分の1 · 最終更新 2026-11-13</p>
+  </footer>
+</main>
+</body>
+</html>
